@@ -24,7 +24,7 @@ class MarkovChainSampler(object):
             return False
 
     @classmethod
-    def parameter_likelihood(cls, w, true_t, expected_t):
+    def parameter_likelihood(cls, w, true_t, expected_t): #TODO: Optimize this, it's ~90% of our compute time
         FIXED_OBSERVATION_NOISE_VARIANCE = 1.0
         return cls.prior(w)*norm.pdf(expected_t, true_t, FIXED_OBSERVATION_NOISE_VARIANCE)
 
@@ -57,6 +57,7 @@ class BayesianLinearRegression(object):
             print(min(p),max(p))
             print(np.sum(p)/len(p))
             print(np.histogram(p))
+        return samples
 
 class LinearRegressionModel(object):
     @staticmethod
@@ -67,4 +68,4 @@ import cProfile
 X = np.array([[0,0],[0,1], [1,1], [50,2]])
 y = np.array([0,50.5,50.1, 101])
 cProfile.run('BayesianLinearRegression().get_posterior_parameter_samples(X,y, 15000, burn_in=5000, thinning=2)',
-             sort='tottime')
+             sort='cumtime')
