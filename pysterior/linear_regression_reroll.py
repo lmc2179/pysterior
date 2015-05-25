@@ -29,22 +29,27 @@ class MarkovChainSampler(object):
         return cls.prior(w)*norm.pdf(expected_t, true_t, FIXED_OBSERVATION_NOISE_VARIANCE)
 
 class BayesianLinearRegression(object):
-    @staticmethod
-    def get_posterior_samples(X, y, iterations, burn_in=None, thinning=None):
+    def __init__(self):
+        self.sampler = MarkovChainSampler()
+        self.model = LinearRegressionModel()
+
+    def _get_next_parameter_sample(self, w, x, t):
+        potential_w = self.sampler.propose(w)
+        expected_t = self.model.f(x, w)
+        expected_t_potential = self.model.f(x, potential_w)
+        prob_w = self.sampler.parameter_likelihood(w, t, expected_t)
+        prob_potential_w = self.sampler.parameter_likelihood(potential_w, t, expected_t_potential)
+        if self.sampler.accept(prob_w, prob_potential_w):
+            w = potential_w
+        return w
+
+    def get_posterior_parameter_samples(self, X, y, iterations, burn_in=None, thinning=None):
         dimension = len(X[0])
         w = np.zeros(dimension)
         samples = []
-        sampler = MarkovChainSampler()
-        model = LinearRegressionModel()
         for i in range(iterations):
             for x,t in zip(X,y):
-                potential_w = sampler.propose(w)
-                expected_t = model.f(x,w)
-                expected_t_potential = model.f(x, potential_w)
-                prob_w = sampler.parameter_likelihood(w, t, expected_t)
-                prob_potential_w = sampler.parameter_likelihood(potential_w, t, expected_t_potential)
-                if sampler.accept(prob_w, prob_potential_w):
-                    w = potential_w
+                w = self._get_next_parameter_sample(w, x, t)
                 if burn_in and i > burn_in and thinning and i%thinning == 0:
                     samples.append(w)
         parameter_samples = zip(*samples)
@@ -61,4 +66,5 @@ class LinearRegressionModel(object):
 import cProfile
 X = np.array([[0,0],[0,1], [1,1], [50,2]])
 y = np.array([0,50.5,50.1, 101])
-cProfile.run('BayesianLinearRegression.get_posterior_samples(X,y, 15000, burn_in=5000, thinning=2)')
+cProfile.run('BayesianLinearRegression().get_posterior_parameter_samples(X,y, 15000, burn_in=5000, thinning=2)',
+             sort='tottime')
