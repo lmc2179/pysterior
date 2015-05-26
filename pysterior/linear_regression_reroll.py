@@ -10,12 +10,6 @@ class MarkovChainSampler(object):
         return np.array([random.gauss(w_i, PROPOSAL_VARIANCE) for w_i in current])
 
     @staticmethod
-    def prior(w):
-        FIXED_PRECISION = 0.0001
-        probabilities = norm.pdf(w, 0, 1.0/FIXED_PRECISION)
-        return reduce(lambda x,y:x*y, probabilities, 1.0)
-
-    @staticmethod
     def accept(prob_old, prob_new):
         acceptance_prob = min(1, prob_new/prob_old)
         if random.random() < acceptance_prob:
@@ -26,7 +20,17 @@ class MarkovChainSampler(object):
     @classmethod
     def parameter_likelihood(cls, w, true_t, expected_t): #TODO: Optimize this, it's ~90% of our compute time
         FIXED_OBSERVATION_NOISE_VARIANCE = 1.0
-        return cls.prior(w)*norm.pdf(expected_t, true_t, FIXED_OBSERVATION_NOISE_VARIANCE)
+        return cls._prior(w)*cls._observation_likelihood(FIXED_OBSERVATION_NOISE_VARIANCE, expected_t, true_t)
+
+    @staticmethod
+    def _prior(w):
+        FIXED_PRECISION = 0.0001
+        probabilities = norm.pdf(w, 0, 1.0/FIXED_PRECISION)
+        return reduce(lambda x,y:x*y, probabilities, 1.0)
+
+    @classmethod
+    def _observation_likelihood(cls, FIXED_OBSERVATION_NOISE_VARIANCE, expected_t, true_t):
+        return norm.pdf(expected_t, true_t, FIXED_OBSERVATION_NOISE_VARIANCE)
 
 class BayesianLinearRegression(object):
     def __init__(self):
