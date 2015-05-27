@@ -2,16 +2,19 @@ import numpy as np
 import random
 from functools import reduce
 from scipy.stats.distributions import norm
-from math import log, exp
+from math import log, exp, pi
 
 LOG_ONE = log(1.0)
+MIN_LOG_PRECISION =1e-315
 
 def lognormpdf(x, mean, sd):
     var = float(sd)**2
-    pi = 3.1415926
     denom = (2*pi*var)**.5
     num = exp(-(float(x)-float(mean))**2/(2*var))
-    return log(num/denom)
+    if num > MIN_LOG_PRECISION:
+        return log(num/denom)
+    else:
+        return log(MIN_LOG_PRECISION/denom)
 
 class MarkovChainSampler(object):
     @staticmethod
@@ -40,7 +43,7 @@ class MarkovChainSampler(object):
 
     @classmethod
     def _observation_likelihood(cls, FIXED_OBSERVATION_NOISE_VARIANCE, expected_t, true_t):
-        return norm.logpdf(expected_t, true_t, FIXED_OBSERVATION_NOISE_VARIANCE)
+        return lognormpdf(expected_t, true_t, FIXED_OBSERVATION_NOISE_VARIANCE)
 
 class BayesianLinearRegression(object):
     def __init__(self):
@@ -79,7 +82,9 @@ class LinearRegressionModel(object):
         return x.dot(w)
 
 import cProfile
-X = np.array([[0,0],[0,1], [1,1], [50,2]])
-y = np.array([0,50.5,50.1, 101])
-cProfile.run('BayesianLinearRegression().get_posterior_parameter_samples(X,y, 15000, burn_in=5000, thinning=2)',
+TRUE_WEIGHTS = np.array([-13.5,50.0])
+# X = np.array([[random.random()*100, random.random()*100] for i in range(4)])
+X = np.array([[0,0],[0,1], [1,1], [50,2], [random.random()*100, random.random()*100]])
+y = np.array([TRUE_WEIGHTS.dot(x) for x in X])
+cProfile.run('BayesianLinearRegression().get_posterior_parameter_samples(X,y, 45000, burn_in=15000, thinning=2)',
              sort='cumtime')
