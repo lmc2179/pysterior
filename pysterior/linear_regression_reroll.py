@@ -11,7 +11,10 @@ def lognormpdf(x, mean, sd):
     var = float(sd)**2
     denom = (2*pi*var)**.5
     num = exp(-(float(x)-float(mean))**2/(2*var))
-    return log(num/denom)
+    try:
+        return log(num/denom)
+    except ValueError:
+        return norm.logpdf(x, mean, sd) #TODO: Why does this work when the naive approach does not?
 
 class MarkovChainSampler(object):
     @staticmethod
@@ -40,7 +43,7 @@ class MarkovChainSampler(object):
 
     @classmethod
     def _observation_likelihood(cls, FIXED_OBSERVATION_NOISE_VARIANCE, expected_t, true_t):
-        return norm.logpdf(expected_t, true_t, FIXED_OBSERVATION_NOISE_VARIANCE)
+        return lognormpdf(expected_t, true_t, FIXED_OBSERVATION_NOISE_VARIANCE)
 
 class BayesianLinearRegression(object):
     def __init__(self):
