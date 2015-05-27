@@ -2,9 +2,16 @@ import numpy as np
 import random
 from functools import reduce
 from scipy.stats.distributions import norm
-from math import log
+from math import log, exp
 
 LOG_ONE = log(1.0)
+
+def lognormpdf(x, mean, sd):
+    var = float(sd)**2
+    pi = 3.1415926
+    denom = (2*pi*var)**.5
+    num = exp(-(float(x)-float(mean))**2/(2*var))
+    return log(num/denom)
 
 class MarkovChainSampler(object):
     @staticmethod
@@ -28,7 +35,7 @@ class MarkovChainSampler(object):
     @staticmethod
     def _prior(w):
         FIXED_PRECISION = 0.0001
-        probabilities = norm.logpdf(w, 0, 1.0/FIXED_PRECISION)
+        probabilities = (lognormpdf(w_i, 0, 1.0/FIXED_PRECISION) for w_i in w)
         return reduce(lambda x,y:x+y, probabilities, 1.0)
 
     @classmethod
