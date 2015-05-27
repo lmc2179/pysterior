@@ -2,6 +2,9 @@ import numpy as np
 import random
 from functools import reduce
 from scipy.stats.distributions import norm
+from math import log
+
+LOG_ONE = log(1.0)
 
 class MarkovChainSampler(object):
     @staticmethod
@@ -11,8 +14,8 @@ class MarkovChainSampler(object):
 
     @staticmethod
     def accept(prob_old, prob_new):
-        acceptance_prob = min(1, prob_new/prob_old)
-        if random.random() < acceptance_prob:
+        acceptance_prob = min(LOG_ONE, prob_new - prob_old)
+        if log(random.random()) < acceptance_prob:
             return True
         else:
             return False
@@ -20,17 +23,17 @@ class MarkovChainSampler(object):
     @classmethod
     def parameter_likelihood(cls, w, true_t, expected_t): #TODO: Optimize this, it's ~90% of our compute time
         FIXED_OBSERVATION_NOISE_VARIANCE = 1.0
-        return cls._prior(w)*cls._observation_likelihood(FIXED_OBSERVATION_NOISE_VARIANCE, expected_t, true_t)
+        return cls._prior(w)+cls._observation_likelihood(FIXED_OBSERVATION_NOISE_VARIANCE, expected_t, true_t)
 
     @staticmethod
     def _prior(w):
         FIXED_PRECISION = 0.0001
-        probabilities = norm.pdf(w, 0, 1.0/FIXED_PRECISION)
-        return reduce(lambda x,y:x*y, probabilities, 1.0)
+        probabilities = norm.logpdf(w, 0, 1.0/FIXED_PRECISION)
+        return reduce(lambda x,y:x+y, probabilities, 1.0)
 
     @classmethod
     def _observation_likelihood(cls, FIXED_OBSERVATION_NOISE_VARIANCE, expected_t, true_t):
-        return norm.pdf(expected_t, true_t, FIXED_OBSERVATION_NOISE_VARIANCE)
+        return norm.logpdf(expected_t, true_t, FIXED_OBSERVATION_NOISE_VARIANCE)
 
 class BayesianLinearRegression(object):
     def __init__(self):
