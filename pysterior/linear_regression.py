@@ -1,8 +1,10 @@
-import numpy as np
 import random
 from functools import reduce
-from scipy.stats.distributions import norm
 from math import log, exp, pi
+
+import numpy as np
+from scipy.stats.distributions import norm
+
 
 LOG_ONE = log(1.0)
 MIN_LOG_PRECISION =1e-315
@@ -81,9 +83,3 @@ class LinearRegressionModel(object):
     def f(x,w):
         return x.dot(w)
 
-import cProfile
-TRUE_WEIGHTS = np.array([-13.5,50.0])
-X = np.array([[random.randint(-100,100), random.randint(-100,100)] for i in range(20)])
-y = np.array([TRUE_WEIGHTS.dot(x) for x in X])
-cProfile.run('BayesianLinearRegression().get_posterior_parameter_samples(X,y, 50000, burn_in=25000, thinning=2)',
-             sort='cumtime')
