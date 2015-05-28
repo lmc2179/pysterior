@@ -1,5 +1,5 @@
 import random
-from pymc import stochastic, deterministic,Normal, Uniform, MCMC
+from pymc import stochastic, deterministic, Normal, Uniform, MCMC
 import numpy as np
 from scipy.stats import multivariate_normal
 
