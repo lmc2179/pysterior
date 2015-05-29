@@ -50,6 +50,9 @@ class AbstractMetropolisSampler(object):
         raise NotImplementedError
 
 class MetropolisRegressionSampler(AbstractMetropolisSampler):
+    def __init__(self, regression_function):
+        self.regression_function = regression_function
+
     def propose(self, current):
         return fixed_variance_gaussian_proposal(current)
 
@@ -63,18 +66,13 @@ class MetropolisRegressionSampler(AbstractMetropolisSampler):
     def parameter_likelihood(self, w, true_t, expected_t): #TODO: Optimize this, it's ~90% of our compute time
         return NoisyRegressorDistribution().get_likelihood(w, true_t, expected_t)
 
-class BayesianLinearRegression(object):
-    def __init__(self):
-        self.sampler = MetropolisRegressionSampler()
-        self.model = LinearRegressionModel()
-
     def _get_next_parameter_sample(self, w, x, t):
-        potential_w = self.sampler.propose(w)
-        expected_t = self.model.f(x, w)
-        expected_t_potential = self.model.f(x, potential_w)
-        prob_w = self.sampler.parameter_likelihood(w, t, expected_t)
-        prob_potential_w = self.sampler.parameter_likelihood(potential_w, t, expected_t_potential)
-        if self.sampler.accept(prob_w, prob_potential_w):
+        potential_w = self.propose(w)
+        expected_t = self.regression_function(x, w)
+        expected_t_potential = self.regression_function(x, potential_w)
+        prob_w = self.parameter_likelihood(w, t, expected_t)
+        prob_potential_w = self.parameter_likelihood(potential_w, t, expected_t_potential)
+        if self.accept(prob_w, prob_potential_w):
             w = potential_w
         return w
 
@@ -94,8 +92,14 @@ class BayesianLinearRegression(object):
             print(np.histogram(p))
         return samples
 
-class LinearRegressionModel(object):
-    @staticmethod
-    def f(x,w):
-        return x.dot(w)
+class BayesianLinearRegression(object):
+    def __init__(self):
+        self.sampler = MetropolisRegressionSampler(linear_regression_function)
+
+    def fit_sample(self, X, y, iterations, burn_in=None, thinning=None):
+        self.samples = self.sampler.get_posterior_parameter_samples(X, y, iterations, burn_in, thinning)
+        return self.samples
+
+def linear_regression_function(x,w):
+    return x.dot(w)
 

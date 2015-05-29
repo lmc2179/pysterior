@@ -8,4 +8,4 @@ class RegressionTest(unittest.TestCase):
         TRUE_WEIGHTS = np.array([-13.5,50.0])
         X = np.array([[random.randint(-100,100), random.randint(-100,100)] for i in range(20)])
         y = np.array([TRUE_WEIGHTS.dot(x) for x in X])
-        samples = BayesianLinearRegression().get_posterior_parameter_samples(X,y, 50000, burn_in=25000, thinning=2)
+        samples = BayesianLinearRegression().fit_sample(X,y, 50000, burn_in=25000, thinning=2)
