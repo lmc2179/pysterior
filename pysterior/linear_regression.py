@@ -33,9 +33,23 @@ class NoisyRegressorDistribution(object):
     def _observation_likelihood(self, FIXED_OBSERVATION_NOISE_VARIANCE, expected_t, true_t):
         return lognormpdf(expected_t, true_t, FIXED_OBSERVATION_NOISE_VARIANCE)
 
-class MarkovChainSampler(object):
+class AbstractMetropolisSampler(object):
     LOG_ONE = log(1.0)
 
+    def propose(self, current):
+        raise NotImplementedError
+
+    def accept(self, prob_old, prob_new):
+        acceptance_prob = min(self.LOG_ONE, prob_new - prob_old)
+        if log(random.random()) < acceptance_prob:
+            return True
+        else:
+            return False
+
+    def parameter_likelihood(self, w, true_t, expected_t):
+        raise NotImplementedError
+
+class MetropolisRegressionSampler(AbstractMetropolisSampler):
     def propose(self, current):
         return fixed_variance_gaussian_proposal(current)
 
@@ -51,7 +65,7 @@ class MarkovChainSampler(object):
 
 class BayesianLinearRegression(object):
     def __init__(self):
-        self.sampler = MarkovChainSampler()
+        self.sampler = MetropolisRegressionSampler()
         self.model = LinearRegressionModel()
 
     def _get_next_parameter_sample(self, w, x, t):
