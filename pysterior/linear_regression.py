@@ -5,8 +5,6 @@ from math import log, exp, pi
 import numpy as np
 from scipy.stats.distributions import norm
 
-
-LOG_ONE = log(1.0)
 MIN_LOG_PRECISION =1e-315
 
 def lognormpdf(x, mean, sd):
@@ -18,34 +16,38 @@ def lognormpdf(x, mean, sd):
     except ValueError:
         return norm.logpdf(x, mean, sd) #TODO: Why does this work when the naive approach does not?
 
-class MarkovChainSampler(object):
-    @staticmethod
-    def propose(current):
+def fixed_variance_gaussian_proposal(mu):
         PROPOSAL_VARIANCE = 0.1
-        return np.array([random.gauss(w_i, PROPOSAL_VARIANCE) for w_i in current])
+        return np.array([random.gauss(w_i, PROPOSAL_VARIANCE) for w_i in mu])
 
-    @staticmethod
-    def accept(prob_old, prob_new):
-        acceptance_prob = min(LOG_ONE, prob_new - prob_old)
+class NoisyRegressorDistribution(object):
+    def get_likelihood(self, w, true_t, expected_t):
+        FIXED_OBSERVATION_NOISE_VARIANCE = 1.0
+        return self._flat_gaussian_prior(w)+self._observation_likelihood(FIXED_OBSERVATION_NOISE_VARIANCE, expected_t, true_t)
+
+    def _flat_gaussian_prior(self, w):
+        FIXED_PRECISION = 0.0001
+        probabilities = (lognormpdf(w_i, 0, 1.0/FIXED_PRECISION) for w_i in w)
+        return reduce(lambda x,y:x+y, probabilities, 1.0)
+
+    def _observation_likelihood(self, FIXED_OBSERVATION_NOISE_VARIANCE, expected_t, true_t):
+        return lognormpdf(expected_t, true_t, FIXED_OBSERVATION_NOISE_VARIANCE)
+
+class MarkovChainSampler(object):
+    LOG_ONE = log(1.0)
+
+    def propose(self, current):
+        return fixed_variance_gaussian_proposal(current)
+
+    def accept(self, prob_old, prob_new):
+        acceptance_prob = min(self.LOG_ONE, prob_new - prob_old)
         if log(random.random()) < acceptance_prob:
             return True
         else:
             return False
 
-    @classmethod
-    def parameter_likelihood(cls, w, true_t, expected_t): #TODO: Optimize this, it's ~90% of our compute time
-        FIXED_OBSERVATION_NOISE_VARIANCE = 1.0
-        return cls._prior(w)+cls._observation_likelihood(FIXED_OBSERVATION_NOISE_VARIANCE, expected_t, true_t)
-
-    @staticmethod
-    def _prior(w):
-        FIXED_PRECISION = 0.0001
-        probabilities = (lognormpdf(w_i, 0, 1.0/FIXED_PRECISION) for w_i in w)
-        return reduce(lambda x,y:x+y, probabilities, 1.0)
-
-    @classmethod
-    def _observation_likelihood(cls, FIXED_OBSERVATION_NOISE_VARIANCE, expected_t, true_t):
-        return lognormpdf(expected_t, true_t, FIXED_OBSERVATION_NOISE_VARIANCE)
+    def parameter_likelihood(self, w, true_t, expected_t): #TODO: Optimize this, it's ~90% of our compute time
+        return NoisyRegressorDistribution().get_likelihood(w, true_t, expected_t)
 
 class BayesianLinearRegression(object):
     def __init__(self):
