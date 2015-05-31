@@ -1,17 +1,11 @@
 import random
 from functools import reduce
 from math import log, exp, pi
-
 import numpy as np
-from scipy.stats.distributions import norm
+import pyximport; pyximport.install()
+from norm_pdf import lognormpdf
 
 MIN_LOG_PRECISION =1e-315
-
-def lognormpdf(x, mean, sd):
-    var = float(sd)**2
-    denom = (2*pi*var)**.5
-    num = -(float(x)-float(mean))**2/(2*var)
-    return num - log(denom)
 
 def fixed_variance_gaussian_proposal(mu):
         PROPOSAL_VARIANCE = 0.1
@@ -25,7 +19,7 @@ class NoisyRegressorDistribution(object):
     def _flat_gaussian_prior(self, w):
         FIXED_PRECISION = 0.0001
         probabilities = (lognormpdf(w_i, 0, 1.0/FIXED_PRECISION) for w_i in w)
-        return reduce(lambda x,y:x+y, probabilities, 1.0)
+        return sum(probabilities)
 
     def _observation_likelihood(self, FIXED_OBSERVATION_NOISE_VARIANCE, expected_t, true_t):
         return lognormpdf(expected_t, true_t, FIXED_OBSERVATION_NOISE_VARIANCE)
