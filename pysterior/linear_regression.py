@@ -1,11 +1,8 @@
 import random
-from functools import reduce
-from math import log, exp, pi
+from math import log
 import numpy as np
 import pyximport; pyximport.install()
 from norm_pdf import lognormpdf
-
-MIN_LOG_PRECISION =1e-315
 
 def fixed_variance_gaussian_proposal(mu):
         PROPOSAL_VARIANCE = 0.1
@@ -46,13 +43,6 @@ class MetropolisRegressionSampler(AbstractMetropolisSampler):
 
     def propose(self, current):
         return fixed_variance_gaussian_proposal(current)
-
-    def accept(self, prob_old, prob_new):
-        acceptance_prob = min(self.LOG_ONE, prob_new - prob_old)
-        if log(random.random()) < acceptance_prob:
-            return True
-        else:
-            return False
 
     def parameter_likelihood(self, w, true_t, expected_t): #TODO: Optimize this, it's ~90% of our compute time
         return NoisyRegressorDistribution().get_likelihood(w, true_t, expected_t)
