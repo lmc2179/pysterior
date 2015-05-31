@@ -82,11 +82,6 @@ class MetropolisRegressionSampler(AbstractMetropolisSampler):
                 w = self._get_next_parameter_sample(w, x, t)
                 if burn_in and i > burn_in and thinning and i%thinning == 0:
                     samples.append(w)
-        parameter_samples = zip(*samples)
-        for p in parameter_samples:
-            print(min(p),max(p))
-            print(np.sum(p)/len(p))
-            print(np.histogram(p))
         return samples
 
 class BayesianLinearRegression(object):
@@ -95,7 +90,12 @@ class BayesianLinearRegression(object):
 
     def fit_sample(self, X, y, iterations, burn_in=None, thinning=None):
         self.samples = self.sampler.get_posterior_parameter_samples(X, y, iterations, burn_in, thinning)
-        return self.samples
+
+    def get_parameter_samples(self):
+        return np.array(list(zip(*self.samples)))
+
+    def get_parameter_sample_mean(self):
+        return np.array([np.sum(p)/len(p) for p in self.get_parameter_samples()])
 
 def linear_regression_function(x,w):
     return x.dot(w)
