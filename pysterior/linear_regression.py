@@ -10,11 +10,8 @@ MIN_LOG_PRECISION =1e-315
 def lognormpdf(x, mean, sd):
     var = float(sd)**2
     denom = (2*pi*var)**.5
-    num = exp(-(float(x)-float(mean))**2/(2*var))
-    try:
-        return log(num/denom)
-    except ValueError:
-        return norm.logpdf(x, mean, sd) #TODO: Why does this work when the naive approach does not?
+    num = -(float(x)-float(mean))**2/(2*var)
+    return num - log(denom)
 
 def fixed_variance_gaussian_proposal(mu):
         PROPOSAL_VARIANCE = 0.1
