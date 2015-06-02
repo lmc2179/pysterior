@@ -3,6 +3,34 @@ import random
 import numpy as np
 import unittest
 from matplotlib import pyplot as plt
+from scipy.stats import kstest, norm, t
+
+class AbstractSamplerTest(unittest.TestCase):
+    def _get_samples(self):
+        raise NotImplementedError
+
+    def _get_true_cdf(self):
+        raise NotImplementedError
+
+    def _get_alpha(self):
+        raise NotImplementedError
+
+    def test_kolmogorov_smirnov(self):
+        samples = self._get_samples()
+        cdf = self._get_true_cdf()
+        alpha = self._get_alpha()
+        D,p = kstest(samples, cdf)
+        self.assertGreater(p, alpha, 'p={0}, alpha={1}'.format(p, alpha))
+
+class SamplerTest(AbstractSamplerTest): #TODO: Use this to test a trivial subclass of the AbstractMetropolisSampler
+    def _get_samples(self):
+        return norm.rvs(size=10000)
+
+    def _get_true_cdf(self):
+        return norm.cdf
+
+    def _get_alpha(self):
+        return 0.05
 
 class RegressionTest(unittest.TestCase):
     def test_linear_regression(self):
