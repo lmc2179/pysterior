@@ -24,17 +24,14 @@ class AbstractSamplerTest(unittest.TestCase):
         D,p = kstest(samples, cdf)
         self.assertGreater(p, alpha, 'p={0}, alpha={1}'.format(p, alpha))
 
-class MetropolisSamplerTest(AbstractSamplerTest):
+class MetropolisSamplerTest(unittest.TestCase):
     TRUE_MU, TRUE_SIGMA = 10.0, 3.4
 
     def _get_samples(self):
         pdf_closure = lambda x: lognormpdf(x, self.TRUE_MU, self.TRUE_SIGMA)
         sampler = samplers.GaussianMetropolis1D(1.0, pdf_closure)
-        samples = sampler.sample(100000, 50000, thinning=5)
+        samples = sampler.sample(100000, 50000, thinning=20)
         return samples
-
-    def _get_true_cdf(self):
-        return lambda x: norm.cdf(x, self.TRUE_MU, self.TRUE_SIGMA)
 
     def _get_alpha(self):
         return 0.05
