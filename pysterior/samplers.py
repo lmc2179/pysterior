@@ -1,17 +1,25 @@
 from math import log
 import random
 import numpy as np
+import abc
 
-class AbstractDistribution(object): #TODO: ABC Meta
-    def log_pdf(self, x):
-        raise NotImplementedError
+class AbstractDistribution(object):
+    __metaclass__ = abc.ABCMeta
 
-class AbstractProposalDistribution(object): #TODO: ABC Meta
+    @abc.abstractmethod
+    def log_pdf(self, state):
+        """The log-likelihood of the target distribution in this state."""
+
+class AbstractProposalDistribution(object):
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
     def transition_log_probability(self, current_state, new_state):
-        raise NotImplementedError
+        """Return the log likelihood of a transition under this proposal distribution."""
 
+    @abc.abstractmethod
     def propose(self, current_state):
-        raise NotImplementedError
+        """Propose a new state given the current state."""
 
 def target_distribution_factory(log_pdf):
     class TargetDistribution(AbstractDistribution):
