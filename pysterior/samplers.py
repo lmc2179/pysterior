@@ -10,6 +10,21 @@ class AbstractDistribution(object):
     def log_pdf(self, state):
         """The log-likelihood of the target distribution in this state."""
 
+class AbstractParameterPosteriorDistribution(AbstractDistribution): #TODO: Needs factory, unit test
+    """Posterior distribution P(w|x) for some distribution over x with parameter w."""
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self, data):
+        self.data = data
+
+    @abc.abstractmethod
+    def _prior_log_pdf(self, param_value):
+        """Evaluation of prior for this value of the parameter."""
+
+    @abc.abstractmethod
+    def _observation_log_pdf(self, observations, param_value):
+        """Likelihood function for this data set given a particular value for the parameter."""
+
 class AbstractProposalDistribution(object):
     __metaclass__ = abc.ABCMeta
 
