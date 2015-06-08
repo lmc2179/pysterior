@@ -1,49 +1,8 @@
-from linear_regression import BayesianLinearRegression
-import samplers
 import random
-import numpy as np
 import unittest
+import numpy as np
 from matplotlib import pyplot as plt
-from scipy.stats import kstest, norm, t, mstats
-from norm_pdf import lognormpdf
-
-class AbstractSamplerTest(unittest.TestCase):
-    def _get_samples(self):
-        raise NotImplementedError
-
-    def _get_true_cdf(self):
-        raise NotImplementedError
-
-    def _get_alpha(self):
-        raise NotImplementedError
-
-    def test_kolmogorov_smirnov(self):
-        samples = self._get_samples()
-        cdf = self._get_true_cdf()
-        alpha = self._get_alpha()
-        D,p = kstest(samples, cdf)
-        self.assertGreater(p, alpha, 'p={0}, alpha={1}'.format(p, alpha))
-
-class MetropolisSamplerTest(unittest.TestCase):
-    TRUE_MU, TRUE_SIGMA = 10.0, 3.4
-
-    def _get_samples(self):
-        pdf_closure = lambda x: lognormpdf(x, self.TRUE_MU, self.TRUE_SIGMA)
-        sampler = samplers.GaussianMetropolis1D(1.0, pdf_closure)
-        samples = sampler.sample(100000, 50000, thinning=20)
-        return samples
-
-    def _get_alpha(self):
-        return 0.05
-
-    def test_normality(self):
-        samples = self._get_samples()
-        alpha = self._get_alpha()
-        D, p = mstats.normaltest(samples) #TODO: This fails sometimes
-        self.assertGreater(p, alpha, 'p={0}, alpha={1}'.format(p, alpha))
-
-    def test_kolmogorov_smirnov(self):
-        pass #Normality testing is more accurate here
+from linear_regression import BayesianLinearRegression
 
 class RegressionTest(unittest.TestCase):
     def test_linear_regression(self):
