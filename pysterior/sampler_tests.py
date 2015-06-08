@@ -59,6 +59,12 @@ def skew_laplace_pdf(x, location, left_scale, right_scale):
     if x > location:
         return partition * exp((location - x) / right_scale)
 
+def skew_laplace_cdf(x, location, left_scale, right_scale):
+    if x <= location:
+        return (left_scale / (left_scale+right_scale))*exp((x-location)/left_scale)
+    if x > location:
+        return 1.0 - ((right_scale/(left_scale+right_scale)) * exp((location-x)/right_scale))
+
 def skew_laplace_log_pdf(x, location, left_scale, right_scale):
     partition = 1 / (left_scale + right_scale)
     if x <= location:
@@ -95,16 +101,23 @@ class LaplacianMetropolisTest(AbstractSamplerTest):
         plt.show()
 
 
-class SkewLaplacianMetropolisTest(unittest.TestCase): #TODO: Convert to K-S test
+class SkewLaplacianMetropolisTest(AbstractSamplerTest):
     TRUE_LOC, TRUE_LEFT_SCALE, TRUE_RIGHT_SCALE = 0, 1.0, 4.0
 
     def _get_samples(self):
         pdf_closure = lambda x: skew_laplace_log_pdf(x, self.TRUE_LOC, self.TRUE_LEFT_SCALE, self.TRUE_RIGHT_SCALE)
         sampler = samplers.GaussianMetropolis1D(1.0, pdf_closure)
-        samples = sampler.sample(100000, 50000, thinning=1)
+        samples = sampler.sample(100000, 50000, thinning=20)
         return samples
 
-    def test_skew_pdf(self):
+    def _get_true_cdf(self):
+        cdf_closure = lambda x: [skew_laplace_cdf(x_i, self.TRUE_LOC, self.TRUE_LEFT_SCALE, self.TRUE_RIGHT_SCALE) for x_i in x]
+        return cdf_closure
+
+    def _get_alpha(self):
+        return 0.01
+
+    def draw_skew_pdf_samples(self):
         samples = self._get_samples()
         plt.hist(samples, bins=150)
         plt.show()
