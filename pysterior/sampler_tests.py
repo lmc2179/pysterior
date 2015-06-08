@@ -67,7 +67,7 @@ def skew_laplace_log_pdf(x, location, left_scale, right_scale):
         return log(partition) + ((location - x) / right_scale)
 
 
-class LaplacianMetropolisTest(unittest.TestCase):
+class LaplacianMetropolisTest(unittest.TestCase): #TODO: Convert to K-S test
     TRUE_LOC, TRUE_SCALE = 0, 1.0
 
     def _get_samples(self):
@@ -88,7 +88,7 @@ class LaplacianMetropolisTest(unittest.TestCase):
         plt.show()
 
 
-class SkewLaplacianMetropolisTest(unittest.TestCase): #TODO: This one is crazy, log pdf is doing something weird < 0
+class SkewLaplacianMetropolisTest(unittest.TestCase): #TODO: Convert to K-S test
     TRUE_LOC, TRUE_LEFT_SCALE, TRUE_RIGHT_SCALE = 0, 1.0, 4.0
 
     def _get_samples(self):
