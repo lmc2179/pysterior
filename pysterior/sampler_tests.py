@@ -73,10 +73,10 @@ class LaplacianMetropolisTest(unittest.TestCase):
     def _get_samples(self):
         pdf_closure = lambda x: laplace.logpdf(x, self.TRUE_LOC, self.TRUE_SCALE)
         sampler = samplers.GaussianMetropolis1D(1.0, pdf_closure)
-        samples = sampler.sample(100000, 50000, thinning=10)
+        samples = sampler.sample(100000, 50000, thinning=2)
         return samples
 
-    def test_skew_pdf(self):
+    def test_laplace_pdf(self):
         samples = self._get_samples()
         plt.hist(samples, bins=200)
         plt.show()
@@ -92,12 +92,18 @@ class SkewLaplacianMetropolisTest(unittest.TestCase): #TODO: This one is crazy, 
     TRUE_LOC, TRUE_LEFT_SCALE, TRUE_RIGHT_SCALE = 0, 1.0, 4.0
 
     def _get_samples(self):
-        pdf_closure = lambda x: skew_laplace_pdf(x, self.TRUE_LOC, self.TRUE_LEFT_SCALE, self.TRUE_RIGHT_SCALE)
+        pdf_closure = lambda x: skew_laplace_log_pdf(x, self.TRUE_LOC, self.TRUE_LEFT_SCALE, self.TRUE_RIGHT_SCALE)
         sampler = samplers.GaussianMetropolis1D(1.0, pdf_closure)
-        samples = sampler.sample(100000, 50000, thinning=10)
+        samples = sampler.sample(100000, 50000, thinning=1)
         return samples
 
     def test_skew_pdf(self):
         samples = self._get_samples()
-        plt.hist(samples, bins=100)
+        plt.hist(samples, bins=150)
+        plt.show()
+
+    def draw_skew_pdf(self):
+        X = np.linspace(-4, 4, 110)
+        y = [skew_laplace_log_pdf(x, self.TRUE_LOC, self.TRUE_LEFT_SCALE, self.TRUE_RIGHT_SCALE) for x in X]
+        plt.plot(X , y)
         plt.show()
