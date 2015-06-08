@@ -67,16 +67,23 @@ def skew_laplace_log_pdf(x, location, left_scale, right_scale):
         return log(partition) + ((location - x) / right_scale)
 
 
-class LaplacianMetropolisTest(unittest.TestCase): #TODO: Convert to K-S test
+class LaplacianMetropolisTest(AbstractSamplerTest):
     TRUE_LOC, TRUE_SCALE = 0, 1.0
 
     def _get_samples(self):
         pdf_closure = lambda x: laplace.logpdf(x, self.TRUE_LOC, self.TRUE_SCALE)
         sampler = samplers.GaussianMetropolis1D(1.0, pdf_closure)
-        samples = sampler.sample(100000, 50000, thinning=2)
+        samples = sampler.sample(100000, 50000, thinning=10)
         return samples
 
-    def test_laplace_pdf(self):
+    def _get_alpha(self):
+        return 1e-3
+
+    def _get_true_cdf(self):
+        cdf_closure = lambda x: laplace.cdf(x, self.TRUE_LOC, self.TRUE_SCALE)
+        return cdf_closure
+
+    def draw_laplace_samples_pdf(self):
         samples = self._get_samples()
         plt.hist(samples, bins=200)
         plt.show()
