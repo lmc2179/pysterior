@@ -102,8 +102,10 @@ class Metropolis(MetropolisHastings):
         return self.LOG_ONE
 
 class GaussianMetropolis1D(Metropolis):
-    def __init__(self, proposal_variance, target_distribution):
+    def __init__(self, proposal_variance, target_distribution, initial_lower=0.0, initial_upper=100.0):
         super(GaussianMetropolis1D, self).__init__(target_distribution, GaussianProposalDistribution(proposal_variance))
+        self.initial_lower = initial_lower
+        self.initial_upper = initial_upper
 
     def _get_initial_value(self):
-        return random.gauss(0.0, 100)
+        return random.gauss(self.initial_lower, self.initial_upper)

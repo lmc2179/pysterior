@@ -127,3 +127,32 @@ class SkewLaplacianMetropolisTest(AbstractSamplerTest):
         y = [skew_laplace_log_pdf(x, self.TRUE_LOC, self.TRUE_LEFT_SCALE, self.TRUE_RIGHT_SCALE) for x in X]
         plt.plot(X , y)
         plt.show()
+
+class BimodalMixtureMetropolisTest(AbstractSamplerTest): #TODO: Kolmogorov-smirnov
+    PARAMS1 = -3.0, 1.0
+    PARAMS2 = 3.0, 1.0
+
+    def _get_samples(self):
+        pdf_closure = lambda x: np.log(norm.pdf(x, *self.PARAMS1) + norm.pdf(x, *self.PARAMS2))
+        sampler = samplers.GaussianMetropolis1D(0.4, pdf_closure, -5.0, 5.0)
+        samples = sampler.sample(300000, 1000, thinning=10)
+        return samples
+
+    def _get_true_cdf(self):
+        cdf_closure = lambda x: (norm.cdf(x, *self.PARAMS1) + norm.cdf(x, *self.PARAMS2))/2.0
+        return cdf_closure
+
+    def _get_alpha(self):
+        return 0.01
+
+    def test_draw_pdf_samples(self):
+        samples = self._get_samples()
+        plt.hist(samples, bins=200, normed=True)
+        plt.show()
+
+    def test_draw_pdf(self):
+        X = np.linspace(-4, 4, 110)
+        pdf_closure = lambda x: log(0.5*norm.pdf(x, *self.PARAMS1) + 0.5*norm.pdf(x, *self.PARAMS2))
+        y = [pdf_closure(x) for x in X]
+        plt.plot(X , y)
+        plt.show()
