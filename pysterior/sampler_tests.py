@@ -2,7 +2,7 @@ import unittest
 from matplotlib import pyplot as plt
 import numpy as np
 from scipy.stats import kstest, mstats
-from scipy.stats.distributions import laplace, norm
+from scipy.stats.distributions import laplace, norm, norm_gen
 from math import exp, log
 import samplers
 
@@ -156,3 +156,19 @@ class BimodalMixtureMetropolisTest(AbstractSamplerTest): #TODO: Kolmogorov-smirn
         y = [pdf_closure(x) for x in X]
         plt.plot(X , y)
         plt.show()
+
+class GaussianParamPosteriorTest(unittest.TestCase):
+    def test_posterior_samples(self):
+        TRUE_MU, TRUE_SIGMA = 10.0, 3.5
+        data = np.random.normal(TRUE_MU, TRUE_SIGMA, 100)
+        sampler = samplers.RealGaussianDensityParameterSampler(norm.logpdf, 2, data, 0.5, 0.0001)
+        mu_samples, sigma_samples = zip(*sampler.sample(7000, 2000, thinning=3))
+        mu_avg, sigma_avg = sum(mu_samples)/len(mu_samples), sum(sigma_samples)/len(sigma_samples)
+        print(mu_avg)
+        print(sigma_avg)
+        plt.hist(mu_samples, bins=60) #TODO: Move into sampler class
+        plt.show()
+        plt.hist(sigma_samples, bins=60)
+        plt.show()
+        self.assertAlmostEqual(mu_avg, TRUE_MU, delta=1.0) #These bounds are really wide
+        self.assertAlmostEqual(sigma_avg, TRUE_SIGMA, delta=1.0)

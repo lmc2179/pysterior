@@ -4,11 +4,13 @@ import numpy as np
 import pyximport; pyximport.install()
 from norm_pdf import lognormpdf
 
+#TODO: Scrap this and rewrite using the contents of samplers.py
+
 def fixed_variance_gaussian_proposal(mu):
         PROPOSAL_VARIANCE = 0.1
         return np.array([random.gauss(w_i, PROPOSAL_VARIANCE) for w_i in mu])
 
-class NoisyRegressorDistribution(object):
+class NoisyRegressorDistribution(object): #TODO: Scrap this
     def get_likelihood(self, w, true_t, expected_t):
         FIXED_OBSERVATION_NOISE_VARIANCE = 1.0
         return self._flat_gaussian_prior(w)+self._observation_likelihood(FIXED_OBSERVATION_NOISE_VARIANCE, expected_t, true_t)

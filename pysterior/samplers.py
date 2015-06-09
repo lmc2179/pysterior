@@ -2,6 +2,8 @@ from math import log
 import random
 import numpy as np
 import abc
+import pyximport; pyximport.install()
+from norm_pdf import lognormpdf
 
 class AbstractDistribution(object):
     __metaclass__ = abc.ABCMeta
@@ -9,21 +11,6 @@ class AbstractDistribution(object):
     @abc.abstractmethod
     def log_pdf(self, state):
         """The log-likelihood of the target distribution in this state."""
-
-class AbstractParameterPosteriorDistribution(AbstractDistribution): #TODO: Needs factory, unit test
-    """Posterior distribution P(w|X) for some distribution over x with parameter w, given a dataset X."""
-    __metaclass__ = abc.ABCMeta
-
-    def __init__(self, data):
-        self.data = data
-
-    @abc.abstractmethod
-    def _prior_log_pdf(self, param_value):
-        """Evaluation of prior P(w) for this value of the parameter."""
-
-    @abc.abstractmethod
-    def _observation_log_pdf(self, observations, param_value):
-        """Likelihood function for this data set P(X|w) given a particular value for the parameter."""
 
 class AbstractProposalDistribution(object):
     __metaclass__ = abc.ABCMeta
@@ -49,6 +36,18 @@ class GaussianProposalDistribution(AbstractProposalDistribution):
 
     def propose(self, current_state):
         return np.random.normal(current_state, self.sigma)
+
+class GaussianSphereProposalDistribution(AbstractProposalDistribution):
+    def __init__(self, sigma, number_of_parameters):
+        self.sigma = sigma
+        self.number_of_parameters = number_of_parameters
+
+    def propose(self, current_state):
+        return np.array([np.random.normal(x, self.sigma) for x in current_state])
+
+    def transition_log_probability(self, current_state, new_state):
+        return 0.0
+
 
 class MetropolisHastings(object):
     LOG_ONE = log(1.0)
@@ -109,3 +108,27 @@ class GaussianMetropolis1D(Metropolis):
 
     def _get_initial_value(self):
         return random.gauss(self.initial_lower, self.initial_upper)
+
+class RealGaussianDensityParameterSampler(MetropolisHastings): #TODO: Overweight
+                                                               #TODO: After breaking up, add subsampling
+    def __init__(self, log_pdf, no_of_parameters, data, proposal_variance, hyperprior_precision): #TODO: Too many args
+        self.log_pdf = log_pdf
+        self.no_of_parameters = no_of_parameters
+        target_distribution = self._build_target_distribution(log_pdf, hyperprior_precision, data)
+        proposal_distribution = self._build_proposal_distribution(no_of_parameters, proposal_variance)
+        super(RealGaussianDensityParameterSampler, self).__init__(target_distribution, proposal_distribution)
+
+    def _build_target_distribution(self, log_pdf, hyperprior_precision, data):
+        def log_likelihood(parameter_vector):
+            return sum((log_pdf(d, *parameter_vector) for d in data))
+        def prior_log_likelihood(parameter_vector):
+            return sum((lognormpdf(p, 0, 1.0/hyperprior_precision) for p in parameter_vector))
+        def parameter_likelihood(parameter_vector):
+            return log_likelihood(parameter_vector) + prior_log_likelihood(parameter_vector)
+        return parameter_likelihood
+
+    def _build_proposal_distribution(self, no_of_parameters, proposal_variance):
+        return GaussianSphereProposalDistribution(proposal_variance, no_of_parameters)
+
+    def _get_initial_value(self):
+        return np.ones(self.no_of_parameters)
