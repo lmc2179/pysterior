@@ -37,3 +37,8 @@ class MetropolisHastings(object):
                 if i >= (burn_in-1) and i % thinning == 0:
                     samples.append(current_state)
         return samples
+
+class ParameterPosteriorSample(MetropolisHastings):
+    def __init__(self, prior_log_pdf, data_log_likelihood, proposal):
+        target_distribution = self._build_target_distribution(prior_log_pdf, data_log_likelihood)
+        super(ParameterPosteriorSample, self).__init__(target_distribution, proposal)

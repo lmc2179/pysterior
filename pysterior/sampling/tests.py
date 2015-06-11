@@ -31,3 +31,10 @@ class GaussianDirectSamplingTest(unittest.TestCase):
         self.assertAlmostEqual(sample_mean, self.MU, delta=0.5, msg='Sample mean does not approximate theoretical mean')
         self.assertAlmostEqual(sample_variance, self.SIGMA**2, delta=20.0,
                                msg='Sample mean does not approximate theoretical variance')
+
+class GaussianParameterInference(unittest.TestCase):
+    def test_parameter_sampling(self):
+        prior_log_pdf = None
+        data_log_likelihood = None
+        proposal = proposal_dist.SphereGaussianMetropolisProposal(1.0, 2)
+        sampler = samplers.ParameterPosteriorSample(prior_log_pdf, data_log_likelihood, proposal)
