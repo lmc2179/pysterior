@@ -23,4 +23,7 @@ class GaussianDirectSamplingTest(unittest.TestCase):
                                               self._get_proposal_distribution())
         samples = sampler.sample(90000,50000,2, 32.3)
         sample_mean = sum(samples)/len(samples)
+        sample_variance = 1.0*sum([(s - sample_mean)**2 for s in samples])/(len(samples)-1)
         self.assertAlmostEqual(sample_mean, self.MU, delta=0.5, msg='Sample mean does not approximate theoretical mean')
+        self.assertAlmostEqual(sample_variance, self.SIGMA**2, delta=20.0,
+                               msg='Sample mean does not approximate theoretical variance')
