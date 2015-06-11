@@ -1,11 +1,11 @@
 import unittest
+import pyximport
 import samplers
 import proposal_dist
-import pyximport
+
 pyximport.install()
 import pdfs
 
-#TODO: Gauss test
 #TODO: Exp test
 #TODO: Laplace test
 

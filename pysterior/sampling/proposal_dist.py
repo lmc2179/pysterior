@@ -1,6 +1,8 @@
 import abc
-import numpy as np
 from math import log
+
+import numpy as np
+
 
 class AbstractProposalDistribution(object):
     __metaclass__ = abc.ABCMeta
@@ -13,12 +15,13 @@ class AbstractProposalDistribution(object):
     def propose(self, current_state):
         """Propose a new state given the current state."""
 
-class GaussianMetropolisProposal(AbstractProposalDistribution):
+class MetropolisProposal(AbstractProposalDistribution):
+    def transition_log_probability(self, current_state, new_state):
+        return log(1.0)
+
+class GaussianMetropolisProposal(MetropolisProposal):
     def __init__(self, sigma):
         self.sigma = sigma
 
     def propose(self, current_state):
         return np.random.normal(current_state, self.sigma)
-
-    def transition_log_probability(self, current_state, new_state):
-        return log(1.0)
