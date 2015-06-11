@@ -1,9 +1,12 @@
 from math import log
 import random
-import numpy as np
 import abc
-import pyximport; pyximport.install()
-from norm_pdf import lognormpdf
+
+import numpy as np
+import pyximport;
+
+pyximport.install()
+from sampling.norm_pdf import lognormpdf
 
 class AbstractDistribution(object):
     __metaclass__ = abc.ABCMeta

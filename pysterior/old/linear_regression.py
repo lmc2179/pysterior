@@ -1,8 +1,11 @@
 import random
 from math import log
+
 import numpy as np
-import pyximport; pyximport.install()
-from norm_pdf import lognormpdf
+import pyximport;
+
+pyximport.install()
+from sampling.norm_pdf import lognormpdf
 
 #TODO: Scrap this and rewrite using the contents of samplers.py
 

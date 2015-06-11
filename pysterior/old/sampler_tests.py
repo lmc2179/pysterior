@@ -1,10 +1,13 @@
 import unittest
+from math import exp, log
+
 from matplotlib import pyplot as plt
 import numpy as np
 from scipy.stats import kstest, mstats
-from scipy.stats.distributions import laplace, norm, norm_gen
-from math import exp, log
-import samplers
+from scipy.stats.distributions import laplace, norm
+
+from old import samplers
+
 
 class AbstractSamplerTest(unittest.TestCase):
     def _get_samples(self):

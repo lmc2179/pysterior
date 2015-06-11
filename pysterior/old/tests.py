@@ -1,8 +1,11 @@
 import random
 import unittest
+
 import numpy as np
 from matplotlib import pyplot as plt
-from linear_regression import BayesianLinearRegression
+
+from old.linear_regression import BayesianLinearRegression
+
 
 class RegressionTest(unittest.TestCase):
     def test_linear_regression(self):
