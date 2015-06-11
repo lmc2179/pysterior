@@ -10,6 +10,7 @@ import pdfs
 #TODO: Laplace direct sampling test
 #TODO: Skew Laplace direct sampling test
 #TODO: Kolmogorov-Smirnov testing
+#TODO: Multivariate Gaussian direct sampling
 
 #TODO: PosteriorParamter initial test
 
@@ -33,8 +34,18 @@ class GaussianDirectSamplingTest(unittest.TestCase):
                                msg='Sample mean does not approximate theoretical variance')
 
 class GaussianParameterInference(unittest.TestCase):
+    def get_prior(self):
+        HUGE_VARIANCE = 10000
+        flat_normal_closure = lambda x: pdfs.lognormpdf(x, 0, HUGE_VARIANCE)
+        return flat_normal_closure
+
+    def _get_data_log_likelihood(self, TRUE_MU, TRUE_SIGMA):
+        data_point_likelihood_closure = lambda x: pdfs.lognormpdf(x, TRUE_MU, TRUE_SIGMA)
+        return data_point_likelihood_closure
+
     def test_parameter_sampling(self):
-        prior_log_pdf = None
-        data_log_likelihood = None
+        TRUE_MU, TRUE_SIGMA = 4.0, 2.5
+        prior_log_pdf = self.get_prior()
+        data_log_likelihood = self._get_data_log_likelihood(TRUE_MU, TRUE_SIGMA)
         proposal = proposal_dist.SphereGaussianMetropolisProposal(1.0, 2)
         sampler = samplers.ParameterPosteriorSample(prior_log_pdf, data_log_likelihood, proposal)
