@@ -6,8 +6,12 @@ import proposal_dist
 pyximport.install()
 import pdfs
 
-#TODO: Exp test
-#TODO: Laplace test
+#TODO: Exp direct sampling test
+#TODO: Laplace direct sampling test
+#TODO: Skew Laplace direct sampling test
+#TODO: Kolmogorov-Smirnov testing
+
+#TODO: PosteriorParamter initial test
 
 class GaussianDirectSamplingTest(unittest.TestCase):
     MU, SIGMA = 10, 13.7
