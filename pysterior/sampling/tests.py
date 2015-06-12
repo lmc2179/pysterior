@@ -33,6 +33,7 @@ class GaussianDirectSamplingTest(unittest.TestCase):
         self.assertAlmostEqual(sample_variance, self.SIGMA**2, delta=20.0,
                                msg='Sample mean does not approximate theoretical variance')
 
+@unittest.skip('Skipped GaussianParameterInference until posterior sampling is finished')
 class GaussianParameterInference(unittest.TestCase):
     def get_prior(self):
         HUGE_VARIANCE = 10000
