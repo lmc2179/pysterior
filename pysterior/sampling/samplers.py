@@ -56,9 +56,6 @@ class MetropolisHastings(object):
                     samples.append(current_state)
         return samples
 
-class DynamicProposalMetropolisHastings(MetropolisHastings):
-    pass
-
 class ParameterPosteriorSample(MetropolisHastings):
     def __init__(self, prior_log_pdf, data_log_likelihood, proposal):
         target_distribution = self._build_target_distribution(prior_log_pdf, data_log_likelihood)

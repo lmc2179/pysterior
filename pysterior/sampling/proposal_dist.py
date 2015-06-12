@@ -26,6 +26,14 @@ class GaussianMetropolisProposal(MetropolisProposal):
     def propose(self, current_state):
         return np.random.normal(current_state, self.sigma)
 
+class GaussianAdaptiveMetropolisProposal(GaussianMetropolisProposal):
+    def __init__(self, initial_sigma):
+        super(GaussianAdaptiveMetropolisProposal, self).__init__(initial_sigma)
+
+    def propose(self, current_state):
+        self._mutate_proposal(current_state)
+        super(GaussianAdaptiveMetropolisProposal, self).propose(current_state)
+
 class SphereGaussianMetropolisProposal(AbstractProposalDistribution):
     def __init__(self, sigma, number_of_parameters):
         self.sigma = sigma
