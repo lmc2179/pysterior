@@ -37,9 +37,6 @@ class SphereGaussianMetropolisProposal(MetropolisProposal):
     def propose(self, current_state):
         return np.array([np.random.normal(x, self.sigma) for x in current_state])
 
-# class GaussianAdaptiveMetropolisProposal(AdaptiveVarianceMixin, MetropolisProposal):
-#     def __init__(self, initial_sigma=None):
-#         pass #TODO: initialize proposal
 
 class StatefulProposalMixin(AbstractProposalDistribution):
     """
@@ -52,11 +49,11 @@ class StatefulProposalMixin(AbstractProposalDistribution):
     """
     __metaclass__ = abc.ABCMeta
     def __init__(self, **kwargs):
-        self._initialize_state()
+        self._initialize_state(**kwargs)
         super(StatefulProposalMixin, self).__init__(**kwargs)
 
     def propose(self, current_state):
-        self._update()
+        self._update(current_state)
         return super(StatefulProposalMixin, self).propose(current_state)
 
     @abc.abstractmethod
@@ -64,5 +61,23 @@ class StatefulProposalMixin(AbstractProposalDistribution):
         "Update the mixin's state. This is called before each new state is proposed."
 
     @abc.abstractmethod
-    def _initialize_state(self, *init_args, **init_kwargs):
+    def _initialize_state(self, **init_kwargs):
         "Initialize the mixin's state. This is called first in the __init__."
+
+class RejectionRateMixin(StatefulProposalMixin):
+    def _initialize_state(self, **init_kwargs):
+        self._previous_state = None
+        self._rejected_sample_count = 0
+        self._total_sample_count = 0
+
+    def _update(self, current_state):
+        if self._previous_state is None: #This is the first state we have observed
+            self._rejected_sample_count = 0
+        else:
+            if self._previous_state == current_state:
+                self._rejected_sample_count += 1
+            self._total_sample_count += 1
+        self._previous_state = current_state
+
+    def get_rejection_rate(self):
+        return (1.0*self._rejected_sample_count) / self._total_sample_count

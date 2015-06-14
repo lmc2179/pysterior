@@ -58,6 +58,7 @@ class MHGaussianDirectSamplingTest(AbstractTestCases.GaussianDirectSamplingTest)
     def _get_proposal_distribution(self):
         return proposal_dist.GaussianMetropolisProposal(6.0)
 
+@unittest.skip('')
 class DynamicMHGaussianDirectSamplingTest(AbstractTestCases.GaussianDirectSamplingTest):
     def _get_proposal_distribution(self):
         return proposal_dist.GaussianAdaptiveMetropolisProposal(6.0)
@@ -79,3 +80,20 @@ class GaussianParameterInference(unittest.TestCase):
         data_log_likelihood = self._get_data_log_likelihood(TRUE_MU, TRUE_SIGMA)
         proposal = proposal_dist.SphereGaussianMetropolisProposal(1.0, 2)
         sampler = samplers.ParameterPosteriorSample(prior_log_pdf, data_log_likelihood, proposal)
+
+class AcceptanceRateMixinTest(unittest.TestCase):
+    TEST_STATES = [(0,1,0,1), (0,0,0,0), (1,1,0,0)]
+    EXPECTED_REJECTION = [0.0, 1.0, 2.0/3.0]
+    def test_rejection_rate(self):
+        class GaussianDummyProposal(proposal_dist.RejectionRateMixin, proposal_dist.GaussianMetropolisProposal):
+            pass # Used to repeatedly call propose() and then check rejection_rate
+
+        for states, expected_rejection_rate in zip(self.TEST_STATES,self.EXPECTED_REJECTION):
+            proposal = GaussianDummyProposal(sigma=1.0)
+            [proposal.propose(s) for s in states]
+            self.assertEqual(proposal.get_rejection_rate(), expected_rejection_rate, msg=str(states))
+
+
+@unittest.skip('')
+class VarianceProposalTest(unittest.TestCase):
+    pass
