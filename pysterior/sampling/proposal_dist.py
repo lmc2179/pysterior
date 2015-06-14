@@ -81,3 +81,33 @@ class RejectionRateMixin(StatefulProposalMixin):
 
     def get_rejection_rate(self):
         return (1.0*self._rejected_sample_count) / self._total_sample_count
+
+class OnlineVarianceMixin(StatefulProposalMixin):
+    def _initialize_state(self, **init_kwargs):
+        self._sample_mean = None
+        self._sample_variance = None
+        self.number_observations = None
+
+    def _update(self, current_state):
+        if self._sample_mean is None and self._sample_variance is None:
+            self._sample_mean = current_state
+            self._sample_variance = 0
+            self.number_observations = 1
+        else:
+            self.number_observations += 1
+            self._update_variance(current_state)
+            self._update_mean(current_state)
+
+    def _update_variance(self, current_state):
+        first_term = ((self.number_observations - 2) / (self.number_observations - 1)) * self._sample_variance
+        second_term = ((current_state - self._sample_mean) ** 2 / self.number_observations)
+        self._sample_variance =first_term + second_term
+
+    def _update_mean(self, current_state):
+        self._sample_mean = self._sample_mean + ((current_state - self._sample_mean) / self.number_observations)
+
+    def _get_sample_mean(self):
+        return self._sample_mean
+
+    def _get_sample_variance(self):
+        return self._sample_variance

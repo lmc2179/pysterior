@@ -1,3 +1,4 @@
+import random
 import unittest
 import pyximport
 import samplers
@@ -94,6 +95,19 @@ class AcceptanceRateMixinTest(unittest.TestCase):
             self.assertEqual(proposal.get_rejection_rate(), expected_rejection_rate, msg=str(states))
 
 
-@unittest.skip('')
 class VarianceProposalTest(unittest.TestCase):
-    pass
+    TEST_ITERATIONS = 5
+    DATA_POINTS_PER_ITERATION = 5
+    def test_online_mean_and_variance(self):
+        class GaussianDummyProposal(proposal_dist.OnlineVarianceMixin, proposal_dist.GaussianMetropolisProposal):
+            pass # Used to repeatedly call propose() and then check rejection_rate
+
+
+        for i in range(self.TEST_ITERATIONS):
+            data = [random.random() for _ in range(self.DATA_POINTS_PER_ITERATION)]
+            true_sample_mean = sum(data)/len(data)
+            true_sample_variance = sum([(d-true_sample_mean)**2 for d in data])/(len(data)-1)
+            proposal = GaussianDummyProposal(sigma=1.0)
+            [proposal.propose(d) for d in data]
+            self.assertAlmostEqual(true_sample_mean, proposal._get_sample_mean(), msg='Mean', delta=1e-9)
+            self.assertAlmostEqual(true_sample_variance, proposal._get_sample_variance(), msg='Variance', delta=1e-9)
