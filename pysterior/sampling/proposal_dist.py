@@ -34,13 +34,10 @@ class GaussianAdaptiveMetropolisProposal(GaussianMetropolisProposal):
         self._mutate_proposal(current_state)
         super(GaussianAdaptiveMetropolisProposal, self).propose(current_state)
 
-class SphereGaussianMetropolisProposal(AbstractProposalDistribution):
+class SphereGaussianMetropolisProposal(MetropolisProposal):
     def __init__(self, sigma, number_of_parameters):
         self.sigma = sigma
         self.number_of_parameters = number_of_parameters
 
     def propose(self, current_state):
         return np.array([np.random.normal(x, self.sigma) for x in current_state])
-
-    def transition_log_probability(self, current_state, new_state):
-        return 0.0
