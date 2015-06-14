@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?><diagram program="umlet" version="12.1">
+  <zoom_level>10</zoom_level>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>340</x>
+      <y>80</y>
+      <w>330</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>AbstractProposalDistribution
+--
+-transition_log_probability(s1, s2)
+-propose(s)
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>410</x>
+      <y>120</y>
+      <w>178</w>
+      <h>130</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.
+&lt;&lt;instanceOf&gt;&gt;</panel_attributes>
+    <additional_attributes>90;30;90;110</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>350</x>
+      <y>230</y>
+      <w>290</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>MetropolisProposal
+--
++transition_log_probability(s1,s2)</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>0</x>
+      <y>20</y>
+      <w>190</w>
+      <h>110</h>
+    </coordinates>
+    <panel_attributes>Key for inheritance
+--
+-Abstract
++Implements abstract
+~Modifies Super
+--
+@Mixin</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>370</x>
+      <y>440</y>
+      <w>290</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>GaussianAdaptiveMetropolisProposal
+--
+~propose
+--
+@AdaptiveVarianceMixin</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>570</x>
+      <y>360</y>
+      <w>290</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>SphereGaussianMetropolisProposal
+--
++propose</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>160</x>
+      <y>360</y>
+      <w>290</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>GaussianMetropolisProposal
+--
++propose</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>480</x>
+      <y>270</y>
+      <w>260</w>
+      <h>110</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.
+&lt;&lt;instanceOf&gt;&gt;</panel_attributes>
+    <additional_attributes>30;30;240;90</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>270</x>
+      <y>270</y>
+      <w>260</w>
+      <h>110</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.
+&lt;&lt;instanceOf&gt;&gt;</panel_attributes>
+    <additional_attributes>240;30;30;90</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>420</x>
+      <y>270</y>
+      <w>178</w>
+      <h>190</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.
+&lt;&lt;instanceOf&gt;&gt;</panel_attributes>
+    <additional_attributes>90;30;90;170</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Note</type>
+    <coordinates>
+      <x>730</x>
+      <y>50</y>
+      <w>140</w>
+      <h>110</h>
+    </coordinates>
+    <panel_attributes>New properties
+are mostly
+introduced by
+inheritance.
+bg=blue</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>1220</x>
+      <y>60</y>
+      <w>210</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>StatefulMixin
+--
+-set_initial_state()
+-update_state(s)</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Note</type>
+    <coordinates>
+      <x>950</x>
+      <y>50</y>
+      <w>180</w>
+      <h>240</h>
+    </coordinates>
+    <panel_attributes>Mixins are used
+to introduce state
+in a reusable way.
+
+All Mixins should
+inherit from
+StatefulProposalMixin
+and should not define 
+any methods other than
+update_state(s) and
+set_initial_state().
+
+They should clearly
+indicate what state is
+introduced.
+bg=red
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+</diagram>
