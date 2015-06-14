@@ -100,7 +100,7 @@ class VarianceProposalTest(unittest.TestCase):
     DATA_POINTS_PER_ITERATION = 5
     def test_online_mean_and_variance(self):
         class GaussianDummyProposal(proposal_dist.OnlineVarianceMixin, proposal_dist.GaussianMetropolisProposal):
-            pass # Used to repeatedly call propose() and then check rejection_rate
+            pass # Used to repeatedly call propose() and then check online mean and variance correctness
 
 
         for i in range(self.TEST_ITERATIONS):
