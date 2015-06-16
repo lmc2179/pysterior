@@ -202,8 +202,7 @@ bg=red
 --
 Adds:
   self.sample_average
-  self.sample_variance
-  self.estimated_variance</panel_attributes>
+  self.sample_variance</panel_attributes>
     <additional_attributes/>
   </element>
   <element>

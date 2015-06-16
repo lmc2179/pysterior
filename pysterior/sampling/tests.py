@@ -3,6 +3,8 @@ import unittest
 import pyximport
 import samplers
 import proposal_dist
+from scipy.stats import shapiro
+from matplotlib import pyplot as plt
 pyximport.install()
 import abc
 import pdfs
@@ -48,23 +50,25 @@ class AbstractTestCases(object):
 
         def test_sampling(self): #TODO: This is overweight, and will be abstracted properly when we start testing other distributions
             sampler = self._build_sampler()
-            samples = sampler.sample(90000,50000,2, 32.3)
+            samples = sampler.sample(190000,50000,2, -302.3)
             sample_mean = sum(samples)/len(samples)
             sample_variance = 1.0*sum([(s - sample_mean)**2 for s in samples])/(len(samples)-1)
             self.assertAlmostEqual(sample_mean, self.MU, delta=0.5, msg='Sample mean does not approximate theoretical mean')
             self.assertAlmostEqual(sample_variance, self.SIGMA**2, delta=20.0,
                                    msg='Sample mean does not approximate theoretical variance')
+            print('{0}, Shapiro test: {1}'.format(self.__class__.__name__, shapiro(samples)))
+            # plt.hist(samples, bins=200)
+            # plt.show()
 
 class MHGaussianDirectSamplingTest(AbstractTestCases.GaussianDirectSamplingTest):
     def _get_proposal_distribution(self):
         return proposal_dist.GaussianMetropolisProposal(6.0)
 
-@unittest.skip('')
 class DynamicMHGaussianDirectSamplingTest(AbstractTestCases.GaussianDirectSamplingTest):
     def _get_proposal_distribution(self):
-        return proposal_dist.GaussianAdaptiveMetropolisProposal(6.0)
+        return proposal_dist.GaussianAdaptiveMetropolisProposal(6.0, sampling_period=10000, epsilon=0.01)
 
-@unittest.skip('Skipped GaussianParameterInference until posterior sampling is finished')
+@unittest.skip('Skipped GaussianParameterInference until posterior sampling is finished\n')
 class GaussianParameterInference(unittest.TestCase):
     def get_prior(self):
         HUGE_VARIANCE = 10000
@@ -111,3 +115,15 @@ class VarianceProposalTest(unittest.TestCase):
             [proposal.propose(d) for d in data]
             self.assertAlmostEqual(true_sample_mean, proposal._get_sample_mean(), msg='Mean', delta=1e-9)
             self.assertAlmostEqual(true_sample_variance, proposal._get_sample_variance(), msg='Variance', delta=1e-9)
+
+class IterationCountMixinTest(unittest.TestCase):
+    TEST_STATES = [[], [0], [0,0], [1,1,0,0]]
+    EXPECTED_ITERATION = [0, 1, 2, 4]
+    def test_rejection_rate(self):
+        class GaussianDummyProposal(proposal_dist.IterationCountMixin, proposal_dist.GaussianMetropolisProposal):
+            pass # Used to repeatedly call propose() and then check rejection_rate
+
+        for states, expected_iteration_number in zip(self.TEST_STATES,self.EXPECTED_ITERATION):
+            proposal = GaussianDummyProposal(sigma=1.0)
+            [proposal.propose(s) for s in states]
+            self.assertEqual(proposal.get_iteration(), expected_iteration_number, msg=str(states))

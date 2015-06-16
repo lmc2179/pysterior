@@ -38,7 +38,6 @@ class SphereGaussianMetropolisProposal(MetropolisProposal):
     def propose(self, current_state):
         return np.array([np.random.normal(x, self.sigma) for x in current_state])
 
-
 class StatefulProposalMixin(AbstractProposalDistribution):
     """
     Mixins are used to introduce state in a reusable way.
@@ -65,11 +64,24 @@ class StatefulProposalMixin(AbstractProposalDistribution):
     def _initialize_state(self, **init_kwargs):
         "Initialize the mixin's state. This is called first in the __init__."
 
+class IterationCountMixin(StatefulProposalMixin):
+    def _initialize_state(self, **init_kwargs):
+        self.iteration = 0
+        super(IterationCountMixin, self)._initialize_state(**init_kwargs)
+
+    def _update(self, current_state):
+        self.iteration += 1
+        super(IterationCountMixin, self)._update(current_state)
+
+    def get_iteration(self):
+        return self.iteration
+
 class RejectionRateMixin(StatefulProposalMixin):
     def _initialize_state(self, **init_kwargs):
         self._previous_state = None
         self._rejected_sample_count = 0
         self._total_sample_count = 0
+        super(RejectionRateMixin, self)._initialize_state(**init_kwargs)
 
     def _update(self, current_state):
         if self._previous_state is None: #This is the first state we have observed
@@ -79,36 +91,56 @@ class RejectionRateMixin(StatefulProposalMixin):
                 self._rejected_sample_count += 1
             self._total_sample_count += 1
         self._previous_state = current_state
+        super(RejectionRateMixin, self)._update(current_state)
 
     def get_rejection_rate(self):
         return (1.0*self._rejected_sample_count) / self._total_sample_count
 
 class OnlineVarianceMixin(StatefulProposalMixin):
     def _initialize_state(self, **init_kwargs):
-        self._sample_mean = None
-        self._sample_variance = None
+        self.sample_mean = None
+        self.sample_variance = None
         self.number_observations = None
+        super(OnlineVarianceMixin, self)._initialize_state(**init_kwargs)
 
     def _update(self, current_state):
-        if self._sample_mean is None and self._sample_variance is None:
-            self._sample_mean = current_state
-            self._sample_variance = 0
+        if self.sample_mean is None and self.sample_variance is None:
+            self.sample_mean = current_state
+            self.sample_variance = 0
             self.number_observations = 1
         else:
             self.number_observations += 1
             self._update_variance(current_state)
             self._update_mean(current_state)
+        super(OnlineVarianceMixin, self)._update(current_state)
 
     def _update_variance(self, current_state):
-        first_term = ((self.number_observations - 2) / (self.number_observations - 1)) * self._sample_variance
-        second_term = ((current_state - self._sample_mean) ** 2 / self.number_observations)
-        self._sample_variance =first_term + second_term
+        first_term = ((self.number_observations - 2) / (self.number_observations - 1)) * self.sample_variance
+        second_term = ((current_state - self.sample_mean) ** 2 / self.number_observations)
+        self.sample_variance =first_term + second_term
 
     def _update_mean(self, current_state):
-        self._sample_mean = self._sample_mean + ((current_state - self._sample_mean) / self.number_observations)
+        self.sample_mean = self.sample_mean + ((current_state - self.sample_mean) / self.number_observations)
 
     def _get_sample_mean(self):
-        return self._sample_mean
+        return self.sample_mean
 
     def _get_sample_variance(self):
-        return self._sample_variance
+        return self.sample_variance
+
+class GaussianAdaptiveMetropolisProposal(IterationCountMixin, OnlineVarianceMixin, MetropolisProposal):
+    scaling = 2.4**2
+    def __init__(self, initial_sigma=None, sampling_period=None, epsilon=None, **kwargs):
+        self.initial_sigma = initial_sigma
+        self.sampling_period = sampling_period
+        self.epsilon = epsilon
+        super(GaussianAdaptiveMetropolisProposal, self).__init__(**kwargs)
+
+    def propose(self, current_state):
+        if self.get_iteration() < self.sampling_period:
+            new_state = np.random.normal(current_state, self.initial_sigma)
+        else:
+            proposal_variance = self.sample_variance * self.scaling * self.epsilon
+            new_state = np.random.normal(current_state, proposal_variance)
+        super(GaussianAdaptiveMetropolisProposal, self).propose(current_state)
+        return new_state

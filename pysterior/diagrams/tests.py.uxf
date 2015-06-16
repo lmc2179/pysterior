@@ -3,7 +3,7 @@
   <element>
     <type>com.umlet.element.Class</type>
     <coordinates>
-      <x>350</x>
+      <x>150</x>
       <y>60</y>
       <w>420</w>
       <h>70</h>
@@ -17,7 +17,7 @@ the sampling API.</panel_attributes>
   <element>
     <type>com.umlet.element.Class</type>
     <coordinates>
-      <x>420</x>
+      <x>220</x>
       <y>250</y>
       <w>270</w>
       <h>70</h>
@@ -31,7 +31,7 @@ Gaussian target distribution.</panel_attributes>
   <element>
     <type>com.umlet.element.Relation</type>
     <coordinates>
-      <x>460</x>
+      <x>260</x>
       <y>100</y>
       <w>178</w>
       <h>170</h>
@@ -43,7 +43,7 @@ Gaussian target distribution.</panel_attributes>
   <element>
     <type>com.umlet.element.Class</type>
     <coordinates>
-      <x>200</x>
+      <x>0</x>
       <y>390</y>
       <w>320</w>
       <h>70</h>
@@ -56,7 +56,7 @@ Standard Metropolis.</panel_attributes>
   <element>
     <type>com.umlet.element.Relation</type>
     <coordinates>
-      <x>320</x>
+      <x>120</x>
       <y>290</y>
       <w>250</w>
       <h>120</h>
@@ -68,7 +68,7 @@ Standard Metropolis.</panel_attributes>
   <element>
     <type>com.umlet.element.Class</type>
     <coordinates>
-      <x>580</x>
+      <x>380</x>
       <y>390</y>
       <w>320</w>
       <h>70</h>
@@ -81,7 +81,7 @@ Adaptive Metropolis.</panel_attributes>
   <element>
     <type>com.umlet.element.Relation</type>
     <coordinates>
-      <x>520</x>
+      <x>320</x>
       <y>290</y>
       <w>240</w>
       <h>120</h>
@@ -89,5 +89,31 @@ Adaptive Metropolis.</panel_attributes>
     <panel_attributes>lt=&lt;.
 &lt;&lt;instanceOf&gt;&gt;</panel_attributes>
     <additional_attributes>30;30;220;100</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>810</x>
+      <y>140</y>
+      <w>210</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>AcceptanceRateMixinTest
+--
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>810</x>
+      <y>260</y>
+      <w>210</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>VarianceProposalTest
+--
+</panel_attributes>
+    <additional_attributes/>
   </element>
 </diagram>
