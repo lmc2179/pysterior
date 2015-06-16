@@ -23,8 +23,9 @@ class MetropolisProposal(AbstractProposalDistribution):
         return log(1.0)
 
 class GaussianMetropolisProposal(MetropolisProposal):
-    def __init__(self, sigma=None):
+    def __init__(self, sigma=None, **kwargs):
         self.sigma = sigma
+        super(GaussianMetropolisProposal, self).__init__(**kwargs)
 
     def propose(self, current_state):
         return np.random.normal(current_state, self.sigma)
