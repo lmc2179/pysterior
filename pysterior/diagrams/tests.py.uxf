@@ -4,7 +4,7 @@
     <type>com.umlet.element.Class</type>
     <coordinates>
       <x>150</x>
-      <y>60</y>
+      <y>40</y>
       <w>420</w>
       <h>70</h>
     </coordinates>
@@ -18,7 +18,7 @@ the sampling API.</panel_attributes>
     <type>com.umlet.element.Class</type>
     <coordinates>
       <x>220</x>
-      <y>250</y>
+      <y>230</y>
       <w>270</w>
       <h>70</h>
     </coordinates>
@@ -32,7 +32,7 @@ Gaussian target distribution.</panel_attributes>
     <type>com.umlet.element.Relation</type>
     <coordinates>
       <x>260</x>
-      <y>100</y>
+      <y>80</y>
       <w>178</w>
       <h>170</h>
     </coordinates>
@@ -44,7 +44,7 @@ Gaussian target distribution.</panel_attributes>
     <type>com.umlet.element.Class</type>
     <coordinates>
       <x>0</x>
-      <y>390</y>
+      <y>370</y>
       <w>320</w>
       <h>70</h>
     </coordinates>
@@ -57,7 +57,7 @@ Standard Metropolis.</panel_attributes>
     <type>com.umlet.element.Relation</type>
     <coordinates>
       <x>120</x>
-      <y>290</y>
+      <y>270</y>
       <w>250</w>
       <h>120</h>
     </coordinates>
@@ -69,7 +69,7 @@ Standard Metropolis.</panel_attributes>
     <type>com.umlet.element.Class</type>
     <coordinates>
       <x>380</x>
-      <y>390</y>
+      <y>370</y>
       <w>320</w>
       <h>70</h>
     </coordinates>
@@ -82,38 +82,12 @@ Adaptive Metropolis.</panel_attributes>
     <type>com.umlet.element.Relation</type>
     <coordinates>
       <x>320</x>
-      <y>290</y>
+      <y>270</y>
       <w>240</w>
       <h>120</h>
     </coordinates>
     <panel_attributes>lt=&lt;.
 &lt;&lt;instanceOf&gt;&gt;</panel_attributes>
     <additional_attributes>30;30;220;100</additional_attributes>
-  </element>
-  <element>
-    <type>com.umlet.element.Class</type>
-    <coordinates>
-      <x>810</x>
-      <y>140</y>
-      <w>210</w>
-      <h>70</h>
-    </coordinates>
-    <panel_attributes>AcceptanceRateMixinTest
---
-</panel_attributes>
-    <additional_attributes/>
-  </element>
-  <element>
-    <type>com.umlet.element.Class</type>
-    <coordinates>
-      <x>810</x>
-      <y>260</y>
-      <w>210</w>
-      <h>70</h>
-    </coordinates>
-    <panel_attributes>VarianceProposalTest
---
-</panel_attributes>
-    <additional_attributes/>
   </element>
 </diagram>
