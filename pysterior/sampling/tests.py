@@ -61,7 +61,7 @@ class AbstractTestCases(object):
 
 class MultivariateNormalDirectSamplingTest(AbstractTestCases.OneDimensionalDirectSamplingTest):
     #TODO: This is overweight, combine it with GaussianDirectSamplingTest to form an abstract class
-    #TODO: This is SLOOOOOOOOOOOOOOOOOOOOOwwwwwwwwwwWwWwWWwwwww
+    #TODO: Add a goodness of fit test
     TRUE_MEAN = np.array([-10.0, 10.0])
     TRUE_COV = np.eye(2,2)*5.6
     def _get_proposal_distribution(self):
