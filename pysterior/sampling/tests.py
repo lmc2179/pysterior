@@ -21,7 +21,7 @@ import pdfs
 
 class AbstractTestCases(object):
     "A wrapper around the abstract test case classes, so that unittest.main doesn't pick them up."
-    class OneDimensionalDirectSamplingTest(unittest.TestCase):
+    class DirectSamplingTest(unittest.TestCase):
         __meta__ = abc.ABCMeta
 
         @abc.abstractmethod
@@ -40,7 +40,7 @@ class AbstractTestCases(object):
             sampler_cls = self._get_sampler_class()
             return sampler_cls(self._get_target_log_pdf(),  self._get_proposal_distribution())
 
-    class GaussianDirectSamplingTest(OneDimensionalDirectSamplingTest):
+    class GaussianDirectSamplingTest(DirectSamplingTest):
         "Test direct sampling from a 1D Gaussian. Provides a target distribution, but still requires a proposal and a sampler."
         MU, SIGMA = 10, 13.7
         def _get_target_log_pdf(self):
@@ -59,7 +59,7 @@ class AbstractTestCases(object):
             # plt.hist(samples, bins=200)
             # plt.show()
 
-class MultivariateNormalDirectSamplingTest(AbstractTestCases.OneDimensionalDirectSamplingTest):
+class MultivariateNormalDirectSamplingTest(AbstractTestCases.DirectSamplingTest):
     #TODO: This is overweight, combine it with GaussianDirectSamplingTest to form an abstract class
     #TODO: Add a goodness of fit test
     TRUE_MEAN = np.array([-10.0, 10.0])
@@ -68,7 +68,6 @@ class MultivariateNormalDirectSamplingTest(AbstractTestCases.OneDimensionalDirec
         return proposal_dist.GaussianMetropolisProposal(np.eye(2,2)*1.0)
 
     def _get_target_log_pdf(self):
-        # pdf_closure = lambda x: multivariate_normal.logpdf(x, self.TRUE_MEAN, self.TRUE_COV)
         pdf_closure = lambda x: py_pdfs.mv_normal_exponent(x, self.TRUE_MEAN, self.TRUE_COV)
         return pdf_closure
 
