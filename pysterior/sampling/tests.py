@@ -79,6 +79,15 @@ class AbstractTestCases(object):
             # plt.plot(*zip(*samples), linewidth=0.0, marker='.')
             # plt.show()
 
+class DegenerateMultivariateNormalDirectSamplingTest(AbstractTestCases.MultivariateNormalDirectSamplingTest):
+    TRUE_MEAN = np.array([-10.0])
+    TRUE_COV = np.eye(1,1)*5.6
+    def _get_initial_value(self):
+        return [-302.3]
+
+    def _get_proposal_distribution(self):
+        return proposal_dist.GaussianMetropolisProposal(np.eye(1,1)*1.0)
+
 class TwoDimensionalNormalDirectSamplingTest(AbstractTestCases.MultivariateNormalDirectSamplingTest):
     TRUE_MEAN = np.array([-10.0, 10.0])
     TRUE_COV = np.eye(2,2)*5.6
@@ -96,6 +105,18 @@ class ThreeDimensionalNormalDirectSamplingTest(AbstractTestCases.MultivariateNor
 
     def _get_proposal_distribution(self):
         return proposal_dist.GaussianMetropolisProposal(np.eye(3,3)*1.0)
+
+class BlockedNormalDirectSamplingTest(AbstractTestCases.MultivariateNormalDirectSamplingTest):
+    TRUE_MEAN = np.array([-10.0, 10.0, 1000.0])
+    TRUE_COV = np.eye(3,3)*5.6
+    def _get_initial_value(self):
+        return [0.0, 0.0, 0.0]
+
+    def _get_proposal_distribution(self):
+        return proposal_dist.BlockedProposal(proposals=[proposal_dist.GaussianMetropolisProposal(np.eye(2,2)),
+                                                        proposal_dist.GaussianMetropolisProposal(np.eye(1,1)),],
+                                             blocks=[(0,1), (2)])
+
 
 class MHGaussianDirectSamplingTest(AbstractTestCases.UnivariateNormalDirectSamplingTest):
     def _get_proposal_distribution(self):
