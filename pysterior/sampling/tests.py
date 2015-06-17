@@ -4,6 +4,7 @@ import pyximport
 import samplers
 import proposal_dist
 from scipy.stats import shapiro, multivariate_normal
+import py_pdfs
 from matplotlib import pyplot as plt
 import numpy as np
 pyximport.install()
@@ -67,7 +68,8 @@ class MultivariateNormalDirectSamplingTest(AbstractTestCases.OneDimensionalDirec
         return proposal_dist.GaussianMetropolisProposal(np.eye(2,2)*1.0)
 
     def _get_target_log_pdf(self):
-        pdf_closure = lambda x: multivariate_normal.logpdf(x, self.TRUE_MEAN, self.TRUE_COV)
+        # pdf_closure = lambda x: multivariate_normal.logpdf(x, self.TRUE_MEAN, self.TRUE_COV)
+        pdf_closure = lambda x: py_pdfs.mv_normal_exponent(x, self.TRUE_MEAN, self.TRUE_COV)
         return pdf_closure
 
     def test_sampling(self):
