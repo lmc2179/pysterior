@@ -23,20 +23,22 @@ class MetropolisProposal(AbstractProposalDistribution):
         return log(1.0)
 
 class GaussianMetropolisProposal(MetropolisProposal):
-    def __init__(self, sigma=None, **kwargs):
+    def __init__(self, sigma, **kwargs):
         self.sigma = sigma
+        if np.shape(sigma) == ():
+            self._proposal_function = self._propose_1D_normal
+        else:
+            self._proposal_function = self._propose_multivariate_normal
         super(GaussianMetropolisProposal, self).__init__(**kwargs)
 
-    def propose(self, current_state):
+    def _propose_1D_normal(self, current_state):
         return np.random.normal(current_state, self.sigma)
 
-class SphereGaussianMetropolisProposal(MetropolisProposal):
-    def __init__(self, sigma=None, number_of_parameters=None):
-        self.sigma = sigma
-        self.number_of_parameters = number_of_parameters
+    def _propose_multivariate_normal(self, current_state):
+        return np.random.multivariate_normal(current_state, self.sigma)
 
     def propose(self, current_state):
-        return np.array([np.random.normal(x, self.sigma) for x in current_state])
+        return self._proposal_function(current_state)
 
 class StatefulProposalMixin(AbstractProposalDistribution):
     """

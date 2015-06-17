@@ -3,8 +3,9 @@ import unittest
 import pyximport
 import samplers
 import proposal_dist
-from scipy.stats import shapiro
+from scipy.stats import shapiro, multivariate_normal
 from matplotlib import pyplot as plt
+import numpy as np
 pyximport.install()
 import abc
 import pdfs
@@ -30,9 +31,13 @@ class AbstractTestCases(object):
         def _get_proposal_distribution(self):
             "Returns a proposal distribution object."
 
-        @abc.abstractmethod
         def _get_sampler_class(self):
             "Provide a class which implements the a sample() method and takes a target/proposal distribution."
+            return samplers.MetropolisHastings
+
+        def _build_sampler(self):
+            sampler_cls = self._get_sampler_class()
+            return sampler_cls(self._get_target_log_pdf(),  self._get_proposal_distribution())
 
     class GaussianDirectSamplingTest(OneDimensionalDirectSamplingTest):
         "Test direct sampling from a 1D Gaussian. Provides a target distribution, but still requires a proposal and a sampler."
@@ -40,13 +45,6 @@ class AbstractTestCases(object):
         def _get_target_log_pdf(self):
             pdf_closure = lambda x: pdfs.lognormpdf(x, self.MU, self.SIGMA)
             return pdf_closure
-
-        def _build_sampler(self):
-            sampler_cls = self._get_sampler_class()
-            return sampler_cls(self._get_target_log_pdf(),  self._get_proposal_distribution())
-
-        def _get_sampler_class(self):
-            return samplers.MetropolisHastings
 
         def test_sampling(self): #TODO: This is overweight, and will be abstracted properly when we start testing other distributions
             sampler = self._build_sampler()
@@ -59,6 +57,31 @@ class AbstractTestCases(object):
             print('{0}, Shapiro test: {1}'.format(self.__class__.__name__, shapiro(samples)))
             # plt.hist(samples, bins=200)
             # plt.show()
+
+class MultivariateNormalDirectSamplingTest(AbstractTestCases.OneDimensionalDirectSamplingTest):
+    #TODO: This is overweight, combine it with GaussianDirectSamplingTest to form an abstract class
+    #TODO: This is SLOOOOOOOOOOOOOOOOOOOOOwwwwwwwwwwWwWwWWwwwww
+    TRUE_MEAN = np.array([-10.0, 10.0])
+    TRUE_COV = np.eye(2,2)*5.6
+    def _get_proposal_distribution(self):
+        return proposal_dist.GaussianMetropolisProposal(np.eye(2,2)*1.0)
+
+    def _get_target_log_pdf(self):
+        pdf_closure = lambda x: multivariate_normal.logpdf(x, self.TRUE_MEAN, self.TRUE_COV)
+        return pdf_closure
+
+    def test_sampling(self):
+        sampler = self._build_sampler()
+        samples = sampler.sample(50000,10000,2, [-302.3, 100.0])
+        print(samples)
+        avg_sample = sum(samples)/len(samples)
+        print(avg_sample)
+        v1_mean, v2_mean = avg_sample
+        v1_true, v2_true = self.TRUE_MEAN
+        self.assertAlmostEqual(v1_mean, v1_true, delta=0.1)
+        self.assertAlmostEqual(v2_mean, v2_true, delta=0.1)
+        # plt.plot(*zip(*samples), linewidth=0.0, marker='.')
+        # plt.show()
 
 class MHGaussianDirectSamplingTest(AbstractTestCases.GaussianDirectSamplingTest):
     def _get_proposal_distribution(self):
