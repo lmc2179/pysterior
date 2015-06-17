@@ -107,6 +107,7 @@ class ThreeDimensionalNormalDirectSamplingTest(AbstractTestCases.MultivariateNor
         return proposal_dist.GaussianMetropolisProposal(np.eye(3,3)*1.0)
 
 class BlockedNormalDirectSamplingTest(AbstractTestCases.MultivariateNormalDirectSamplingTest):
+    #TODO: This runs twice as slow as ThreeDimensionalNormalDirectSamplingTest. Why?
     TRUE_MEAN = np.array([-10.0, 10.0, 1000.0])
     TRUE_COV = np.eye(3,3)*5.6
     def _get_initial_value(self):
@@ -115,7 +116,7 @@ class BlockedNormalDirectSamplingTest(AbstractTestCases.MultivariateNormalDirect
     def _get_proposal_distribution(self):
         return proposal_dist.BlockedProposal(proposals=[proposal_dist.GaussianMetropolisProposal(np.eye(2,2)),
                                                         proposal_dist.GaussianMetropolisProposal(np.eye(1,1)),],
-                                             blocks=[(0,1), (2)])
+                                             block_indices=[[0,1], [2]])
 
 
 class MHGaussianDirectSamplingTest(AbstractTestCases.UnivariateNormalDirectSamplingTest):

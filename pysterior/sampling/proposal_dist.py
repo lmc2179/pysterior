@@ -42,3 +42,25 @@ class GaussianMetropolisProposal(MetropolisProposal):
 
 class GaussianAdaptiveMetropolisProposal(GaussianMetropolisProposal):
     pass #TODO: Rewrite with covariance update
+
+class BlockedProposal(MetropolisProposal):
+    def __init__(self, proposals=None, block_indices=None):
+        self.proposals = proposals
+        self.block_indices = block_indices
+        self.total_length = sum([len(b) for b in block_indices])
+        super(BlockedProposal, self).__init__()
+
+    def _break_into_blocks(self, state):
+        return [[state[i] for i in block] for block in self.block_indices]
+
+    def _combine_blocks(self, block_states):
+        result = np.zeros(self.total_length)
+        for block, indices in zip(block_states, self.block_indices):
+            for b,i in zip(block, indices):
+                result[i] = b
+        return result
+
+    def propose(self, current_state):
+        blocks = self._break_into_blocks(current_state)
+        proposed_blocks = [block_proposal.propose(block) for block, block_proposal in zip(blocks, self.proposals)]
+        return self._combine_blocks(proposed_blocks)
