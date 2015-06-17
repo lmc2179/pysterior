@@ -65,26 +65,37 @@ class AbstractTestCases(object):
             pdf_closure = lambda x: py_pdfs.mv_normal_exponent(x, self.TRUE_MEAN, self.TRUE_COV)
             return pdf_closure
 
+        @abc.abstractmethod
+        def _get_initial_value(self):
+            pass
+
         def test_sampling(self):
             sampler = self._build_sampler()
-            samples = sampler.sample(50000,10000,2, [-302.3, 100.0])
+            samples = sampler.sample(50000,10000,2, self._get_initial_value())
             avg_sample = sum(samples)/len(samples)
-            v1_mean, v2_mean = avg_sample
-            v1_true, v2_true = self.TRUE_MEAN
-            self.assertAlmostEqual(v1_mean, v1_true, delta=0.1)
-            self.assertAlmostEqual(v2_mean, v2_true, delta=0.1)
+            for variable_mean, variable_true_value in zip(avg_sample, self.TRUE_MEAN):
+                self.assertAlmostEqual(variable_mean, variable_true_value, delta=0.1)
+            print('Sample mean: {0}; True mean: {1}'.format(avg_sample, self.TRUE_MEAN))
             # plt.plot(*zip(*samples), linewidth=0.0, marker='.')
             # plt.show()
 
-class MultivariateNormalDirectSamplingTest(AbstractTestCases.MultivariateNormalDirectSamplingTest):
+class TwoDimensionalNormalDirectSamplingTest(AbstractTestCases.MultivariateNormalDirectSamplingTest):
     TRUE_MEAN = np.array([-10.0, 10.0])
     TRUE_COV = np.eye(2,2)*5.6
+    def _get_initial_value(self):
+        return [-302.3, 100.0]
+
     def _get_proposal_distribution(self):
         return proposal_dist.GaussianMetropolisProposal(np.eye(2,2)*1.0)
 
-    def _get_target_log_pdf(self):
-        pdf_closure = lambda x: py_pdfs.mv_normal_exponent(x, self.TRUE_MEAN, self.TRUE_COV)
-        return pdf_closure
+class ThreeDimensionalNormalDirectSamplingTest(AbstractTestCases.MultivariateNormalDirectSamplingTest):
+    TRUE_MEAN = np.array([-10.0, 10.0, 100.0])
+    TRUE_COV = np.eye(3,3)*5.6
+    def _get_initial_value(self):
+        return [-302.3, 100.0, 1.5]
+
+    def _get_proposal_distribution(self):
+        return proposal_dist.GaussianMetropolisProposal(np.eye(3,3)*1.0)
 
 class MHGaussianDirectSamplingTest(AbstractTestCases.UnivariateNormalDirectSamplingTest):
     def _get_proposal_distribution(self):
