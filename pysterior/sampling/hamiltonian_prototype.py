@@ -2,7 +2,7 @@
 # refactored into composable middleweight abstractions similar to samplers.py.
 import numpy as np
 import matplotlib.pyplot as plt
-import py_pdfs
+import random
 import theano
 import theano.tensor as T
 
@@ -24,13 +24,23 @@ def gaussian_log_gradient(X):
 
 def calculate_acceptance_probability(current_value, sampled_momentum, proposed_value,
                                                                   proposed_momentum, target_energy):
-    pass
+    metropolis_factor = None #TODO: Add me
+    return min(metropolis_factor, 1)
 
-def leapfrog_step():
-    pass
+def accept(acceptance_probability):
+    return random.random() < acceptance_probability
 
-def run_leapfrog(current_value, momentum, num_steps, step_size, target_energy_gradient):
-    pass
+def leapfrog_step(value, momentum, step_size, energy_gradient):
+    half_step_momentum = momentum + (step_size*0.5*energy_gradient(value))
+    step_value = value + (step_size*half_step_momentum)
+    step_momentum = half_step_momentum + (step_size*0.5*energy_gradient(step_value))
+    return step_value, step_momentum
+
+def run_leapfrog(current_value, current_momentum, num_steps, step_size, target_energy_gradient):
+    value, momentum = current_value, current_momentum
+    for i in range(num_steps):
+        value,momentum = leapfrog_step(value, momentum, step_size, target_energy_gradient)
+    return value, momentum
 
 def run_hamiltonian_sampling(initial_value, num_steps, step_size, target_energy, target_energy_gradient, iterations):
     dimension = len(initial_value)
