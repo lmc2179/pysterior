@@ -60,21 +60,22 @@ class HamiltonianSampler(object):
         return samples
 
 class GaussianEnergy(object):
-    x = T.vector('x')
-    mu = T.vector('mu')
-    inv_cov_matrix = T.matrix('inv_cov_matrix')
-    likelihood = -T.dot(T.dot((x-mu).T,inv_cov_matrix),(x-mu))
-    gaussian_energy = theano.function([x,mu,inv_cov_matrix], likelihood)
-    gaussian_energy_gradient = theano.function([x, mu, inv_cov_matrix], theano.grad(likelihood, x))
-    TRUE_MEAN, TRUE_COV = np.array([0.0,0.0]), np.array([[1,0],[1,1]])
-    INV_COV = np.linalg.inv(TRUE_COV)
+    def __init__(self, mean, covariance):
+        x = T.vector('x')
+        mu = T.vector('mu')
+        inv_cov_matrix = T.matrix('inv_cov_matrix')
+        likelihood = -T.dot(T.dot((x-mu).T,inv_cov_matrix),(x-mu))
+        self.gaussian_energy = theano.function([x,mu,inv_cov_matrix], likelihood)
+        self.gaussian_energy_gradient = theano.function([x, mu, inv_cov_matrix], theano.grad(likelihood, x))
+        self.mean = mean
+        self.inv_cov = np.linalg.inv(covariance)
 
     def target_log_pdf(self, X):
-        return self.gaussian_energy(X, self.TRUE_MEAN, self.INV_COV)
+        return self.gaussian_energy(X, self.mean, self.inv_cov)
 
     def target_log_pdf_gradient(self, X):
-        return self.gaussian_energy_gradient(X, self.TRUE_MEAN, self.INV_COV)
+        return self.gaussian_energy_gradient(X, self.mean, self.inv_cov)
 
-samples = HamiltonianSampler().run_hamiltonian_sampling(np.array([100.0, 100.0]), 100, 0.05, GaussianEnergy(), 5000, burn_in=700)
+samples = HamiltonianSampler().run_hamiltonian_sampling(np.array([100.0, 100.0]), 100, 0.05, GaussianEnergy(np.array([0.0,0.0]), np.array([[1,0],[1,1]])), 5000, burn_in=700)
 plt.plot(*list(zip(*samples)), marker = '.', linewidth=0.0) #TODO: This is wrong - it looks like a random walk
 plt.show()
