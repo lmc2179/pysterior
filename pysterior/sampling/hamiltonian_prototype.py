@@ -27,6 +27,9 @@ class LeapfrogIntegrator(object):
         return value, momentum
 
 class HamiltonianSampler(object):
+    def __init__(self, target_energy):
+        self.target_energy = target_energy
+
     def calculate_acceptance_probability(self, current_value, sampled_momentum, proposed_value,
                                                                       proposed_momentum, target_energy):
         metropolis_num = (target_energy(proposed_value) - (0.5*np.dot(proposed_momentum,proposed_momentum)))
@@ -37,26 +40,25 @@ class HamiltonianSampler(object):
     def accept(self, acceptance_probability):
         return math.log(random.random()) < acceptance_probability
 
-    def run_hamiltonian_sampling(self, initial_value, num_steps, step_size, energy, iterations, burn_in=None):
+    def run_hamiltonian_sampling(self, initial_value, num_steps, step_size, iterations, burn_in=None):
         b = Bar('Sampling', max=iterations, suffix='%(percent).1f%% - %(eta)ds')
         dimension = len(initial_value)
         current_value = initial_value
-        integrator = LeapfrogIntegrator(energy.target_log_pdf_gradient)
+        integrator = LeapfrogIntegrator(self.target_energy.target_log_pdf_gradient)
         samples = []
         for i in range(iterations):
             sampled_momentum = np.random.multivariate_normal(np.zeros(dimension), np.eye(dimension))
             proposed_value, proposed_momentum = integrator.run_leapfrog(current_value, sampled_momentum, num_steps,
                                                                         step_size)
             acceptance_probability = self.calculate_acceptance_probability(current_value, sampled_momentum, proposed_value,
-                                                                      proposed_momentum, energy.target_log_pdf)
-            if burn_in and burn_in < i:
-                if self.accept(acceptance_probability):
-                    samples.append(proposed_value)
-                    current_value = proposed_value
-                else:
-                    samples.append(current_value)
+                                                                      proposed_momentum, self.target_energy.target_log_pdf)
+            if self.accept(acceptance_probability):
+                current_value = proposed_value
+            if (burn_in and burn_in < i) or not burn_in:
+                samples.append(current_value)
             b.next()
         b.finish()
+        print(samples)
         return samples
 
 class GaussianEnergy(object):
@@ -76,6 +78,6 @@ class GaussianEnergy(object):
     def target_log_pdf_gradient(self, X):
         return self.gaussian_energy_gradient(X, self.mean, self.inv_cov)
 
-samples = HamiltonianSampler().run_hamiltonian_sampling(np.array([100.0, 100.0]), 100, 0.05, GaussianEnergy(np.array([0.0,0.0]), np.array([[1,0],[1,1]])), 5000, burn_in=700)
+samples = HamiltonianSampler(GaussianEnergy(np.array([0.0,0.0]), np.array([[1,0],[1,1]]))).run_hamiltonian_sampling(np.array([100.0, 100.0]), 100, 0.05, 5000, burn_in=100)
 plt.plot(*list(zip(*samples)), marker = '.', linewidth=0.0) #TODO: This is wrong - it looks like a random walk
 plt.show()
