@@ -6,6 +6,7 @@ import random
 import theano
 import theano.tensor as T
 import math
+from progress.bar import Bar
 
 LOG_ONE = math.log(1.0)
 
@@ -36,6 +37,7 @@ class LeapfrogIntegrator(object):
         return value, momentum
 
 def run_hamiltonian_sampling(initial_value, num_steps, step_size, target_energy, target_energy_gradient, iterations):
+    b = Bar('Sampling', max=iterations, suffix='%(percent).1f%% - %(eta)ds')
     dimension = len(initial_value)
     current_value = initial_value
     integrator = LeapfrogIntegrator(target_energy_gradient)
@@ -49,6 +51,10 @@ def run_hamiltonian_sampling(initial_value, num_steps, step_size, target_energy,
         if accept(acceptance_probability):
             samples.append(proposed_value)
             current_value = proposed_value
+        else:
+            samples.append(current_value)
+        b.next()
+    b.finish()
     return samples
 
 x = T.vector('x')
@@ -67,7 +73,7 @@ def gaussian_log_pdf(X):
 def gaussian_log_gradient(X):
     return gaussian_energy_gradient(X, TRUE_MEAN, INV_COV)
 
-samples = run_hamiltonian_sampling(np.array([100.0, 100.0]), 100, 0.1, gaussian_log_pdf, gaussian_log_gradient, 1000)
+samples = run_hamiltonian_sampling(np.array([100.0, 100.0]), 100, 0.1, gaussian_log_pdf, gaussian_log_gradient, 5000)
 plt.plot(*list(zip(*samples)), marker = '.', linewidth=0.0) #TODO: This is wrong - it looks like a random walk
 plt.show()
 
