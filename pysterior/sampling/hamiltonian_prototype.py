@@ -42,12 +42,18 @@ class HamiltonianSampler(object):
 
     def run_hamiltonian_sampling(self, initial_value, num_steps, step_size, iterations, burn_in=None):
         b = Bar('Sampling', max=iterations, suffix='%(percent).1f%% - %(eta)ds')
-        dimension = len(initial_value)
+        try:
+            dimension = len(initial_value)
+        except:
+            dimension = 1
         current_value = initial_value
         integrator = LeapfrogIntegrator(self.target_energy.target_log_pdf_gradient)
         samples = []
         for i in range(iterations):
-            sampled_momentum = np.random.multivariate_normal(np.zeros(dimension), np.eye(dimension))
+            if dimension > 1:
+                sampled_momentum = np.random.multivariate_normal(np.zeros(dimension), np.eye(dimension))
+            else:
+                sampled_momentum = np.random.normal(0, 1)
             proposed_value, proposed_momentum = integrator.run_leapfrog(current_value, sampled_momentum, num_steps,
                                                                         step_size)
             acceptance_probability = self.calculate_acceptance_probability(current_value, sampled_momentum, proposed_value,
@@ -58,10 +64,22 @@ class HamiltonianSampler(object):
                 samples.append(current_value)
             b.next()
         b.finish()
-        print(samples)
         return samples
 
-class GaussianEnergy(object):
+import abc
+
+class AbstractEnergy(object):
+    __meta__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def target_log_pdf(self, state):
+        "Log energy at the given state."
+
+    @abc.abstractmethod
+    def target_log_pdf_gradient(self, state):
+        "Gradient of the log energy at a given state."
+
+class GaussianEnergy(AbstractEnergy):
     def __init__(self, mean, covariance):
         x = T.vector('x')
         mu = T.vector('mu')
@@ -78,6 +96,39 @@ class GaussianEnergy(object):
     def target_log_pdf_gradient(self, X):
         return self.gaussian_energy_gradient(X, self.mean, self.inv_cov)
 
-samples = HamiltonianSampler(GaussianEnergy(np.array([0.0,0.0]), np.array([[1,0],[1,1]]))).run_hamiltonian_sampling(np.array([100.0, 100.0]), 100, 0.05, 5000, burn_in=100)
-plt.plot(*list(zip(*samples)), marker = '.', linewidth=0.0) #TODO: This is wrong - it looks like a random walk
+class UnivariateGaussianEnergy(AbstractEnergy):
+    def __init__(self, mean, variance):
+        self.mean = mean
+        self.variance = variance
+
+    def target_log_pdf(self, X):
+        return -((1.0/self.variance)*(X-self.mean)**2)
+
+    def target_log_pdf_gradient(self, X):
+        return -((1.0/self.variance)*2*(X - self.mean))
+
+class UnivariateTEnergy(AbstractEnergy):
+    def __init__(self, dof):
+        self.dof = dof
+
+    def target_log_pdf(self, X):
+        return math.log((1+X**2/self.dof)**(-(self.dof+1)/2))
+
+    def target_log_pdf_gradient(self, X):
+        return -(((self.dof+1)*X)/(self.dof + X**2))
+
+def test_multivariate_gaussian():
+    samples = HamiltonianSampler(GaussianEnergy(np.array([0.0,0.0]), np.array([[1,0],[1,1]]))).run_hamiltonian_sampling(np.array([100.0, 100.0]), 100, 0.05, 5000, burn_in=100)
+    plt.plot(*list(zip(*samples)), marker = '.', linewidth=0.0)
+
+def test_univariate_gaussian():
+    samples = HamiltonianSampler(UnivariateGaussianEnergy(0.0, 3.4)).run_hamiltonian_sampling(100.0, 100, 0.05, 100000, burn_in=10)
+    plt.hist(samples, bins=150, normed=True)
+
+def test_univariate_T():
+    samples = HamiltonianSampler(UnivariateTEnergy(5)).run_hamiltonian_sampling(100.0, 100, 0.05, 100000, burn_in=100)
+    plt.hist(samples, bins=150, normed=True)
+
+test_univariate_gaussian() #TODO: Move to unit tests
+# test_univariate_T()
 plt.show()
