@@ -7,10 +7,15 @@ import theano
 
 class SumOfSquares(abstract_differentiable_function.AbstractDifferentiableFunction):
     def __init__(self):
-        X = T.scalar('x1'), T.scalar('x2')
+        differentiable_argument, other_arguments, output = self._get_variables()
+        all_arguments = differentiable_argument + other_arguments
+        self.function = theano.function(all_arguments, output)
+        self.function_gradient =theano.function(all_arguments, theano.grad(output, differentiable_argument))
+
+    def _get_variables(self):
+        X = [T.scalar('x1'), T.scalar('x2')]
         y = sum([x**2 for x in X])
-        self.function = theano.function(X, y)
-        self.function_gradient =theano.function(X, theano.grad(y, X))
+        return X, [], y
 
     def eval(self, x1, x2):
         return self.function(x1, x2)
