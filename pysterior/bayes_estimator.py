@@ -1,6 +1,7 @@
 import numpy as np
 import random
 
+#TODO: Armijo-Goldstein
 class StochasticBatchGradientDescent(object):
     def minimize(self, target_functions, starting_point, iterations, batch_size=1):
         "Takes an instance of AbstractDifferentiableFunction, and runs minimization with set learning rate."
