@@ -19,5 +19,5 @@ class StochasticGradientDescentTest(unittest.TestCase):
     def univariate_convex_function_test(self):
         optimizer = bayes_estimator.StochasticBatchGradientDescent()
         functions = [Exponential(0), Exponential(3), Exponential(4), Exponential(5)]
-        minimum = optimizer.minimize(functions, starting_point=10.2, iterations=1000, batch_size=2)
-        self.assertAlmostEqual(minimum, -3.0, delta=0.05)
+        minimum = optimizer.minimize(functions, starting_point=10.2, iterations=10000, batch_size=2)
+        self.assertAlmostEqual(minimum, -3.0, delta=0.1)
