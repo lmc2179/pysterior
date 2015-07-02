@@ -1,3 +1,6 @@
+import data_model
+import numpy as np
+
 class LeapfrogIntegrator(object):
     def __init__(self, target_energy_gradient):
         self.target_energy_gradient = target_energy_gradient
@@ -13,3 +16,19 @@ class LeapfrogIntegrator(object):
         for i in range(num_steps):
             value,momentum = self._leapfrog_step(value, momentum, step_size)
         return value, momentum
+
+class AbstractHamiltonianSampler(object):
+    def __init__(self, target_energy):
+        self.target_energy = target_energy
+
+    #TODO: Acceptance in abstract class
+
+    def sample(self, iterations, burn_in=0, thinning=1):
+        raise NotImplementedError
+
+class HamiltonianSamplerStub(AbstractHamiltonianSampler):
+    def sample(self, iterations, burn_in=0, thinning=1):
+        samples = data_model.PosteriorSample()
+        for i in range(iterations):
+            samples.add_sample(np.random.multivariate_normal(np.zeros(3), np.eye(3,3)))
+        return samples
