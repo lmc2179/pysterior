@@ -13,7 +13,7 @@ class PosteriorSample(object):
         self._update_average(new_sample)
 
     def _update_average(self, new_sample):
-        if not self.average:
+        if self.average is None:
             self.average = new_sample
         else:
             self.average = self.average + ((new_sample - self.average)/len(self.samples))
