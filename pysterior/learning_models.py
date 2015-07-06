@@ -1,7 +1,7 @@
-import data_model
-import sampler
 import parametric_functions
 import numpy as np
+
+#TODO: Credible interval prediction
 
 class RegressionModel(object):
     def __init__(self, target_energy, sampler_class, regression_function):
