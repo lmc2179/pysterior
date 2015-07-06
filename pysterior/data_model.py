@@ -1,4 +1,6 @@
 import math
+import random
+import numpy as np
 
 class PosteriorSample(object):
     def __init__(self):
@@ -27,3 +29,6 @@ class PosteriorSample(object):
         left, right = math.floor(center), math.ceil(center)
         sorted_data = sorted(self.samples)
         return (sorted_data[left] + sorted_data[right])/2.0
+
+    def get_random(self, n=1):
+        return np.array([random.choice(self.samples) for i in range(n)])

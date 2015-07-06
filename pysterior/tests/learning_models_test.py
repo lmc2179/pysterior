@@ -1,6 +1,7 @@
 import unittest
 from pysterior import learning_models, sampler, parametric_functions
 import numpy as np
+from scipy.stats import shapiro
 
 class StubSamplingTest(unittest.TestCase):
     def _construct_stub_model(self):
@@ -30,3 +31,10 @@ class StubSamplingTest(unittest.TestCase):
         predictions = model.predict_point_estimate(X)
         for prediction in predictions:
             self.assertAlmostEqual(prediction, 0.0, delta=1e-1)
+
+    def test_predictive_posterior(self):
+        x = np.array([5,5,5])
+        model = self._construct_stub_model()
+        prediction_samples = model.sample_predictive_posterior(x)
+        w,p = shapiro(prediction_samples)
+        self.assertGreater(p, 0.75)

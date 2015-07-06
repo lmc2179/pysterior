@@ -23,3 +23,10 @@ class RegressionModel(object):
     def predict_point_estimate(self, X):
         expected_parameter_value = self.samples.get_mean()
         return np.array([self.regression_function(expected_parameter_value, x) for x in X])
+
+    def sample_predictive_posterior(self, x, no_samples=None):
+        if not no_samples:
+            return np.array([self.regression_function(s, x) for s in self.samples.get_samples()])
+        else:
+            parameter_samples = self.samples.get_random(no_samples)
+            return np.array([self.regression_function(s, x) for s in parameter_samples])
