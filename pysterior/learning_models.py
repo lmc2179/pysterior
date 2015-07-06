@@ -1,6 +1,7 @@
 import data_model
 import sampler
 import parametric_functions
+import numpy as np
 
 class RegressionModel(object):
     def __init__(self, target_energy, sampler_class, regression_function):
@@ -18,3 +19,7 @@ class RegressionModel(object):
 
     def get_samples(self):
         return self.samples
+
+    def predict_point_estimate(self, X):
+        expected_parameter_value = self.samples.get_mean()
+        return np.array([self.regression_function(expected_parameter_value, x) for x in X])
