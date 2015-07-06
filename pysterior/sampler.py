@@ -18,7 +18,7 @@ class LeapfrogIntegrator(object):
         return value, momentum
 
 class AbstractHamiltonianSampler(object):
-    def __init__(self, target_energy):
+    def __init__(self, target_energy=None):
         self.target_energy = target_energy
 
     #TODO: Acceptance in abstract class
