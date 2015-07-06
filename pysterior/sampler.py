@@ -27,6 +27,11 @@ class AbstractHamiltonianSampler(object):
         raise NotImplementedError
 
 class HamiltonianSamplerStub(AbstractHamiltonianSampler):
+    """
+    Trivial class used for testing, which does not utilize the target energy.
+
+    Returns samples from a 3D Gaussian distribution with zero mean and unit sphere covariance.
+    """
     def sample(self, iterations, burn_in=0, thinning=1):
         samples = data_model.PosteriorSample()
         for i in range(iterations):
