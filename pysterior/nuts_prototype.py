@@ -54,6 +54,7 @@ def nuts3(initial_point, epsilon, energy, iterations):
             s = candidate_s * I((forward - back) * back_momentum > 0) * I((forward - back) * forward_momentum > 0)
             j += 1
         samples.append(next_sample)
+        current_sample = next_sample
     return samples
 
 @functools.lru_cache()
