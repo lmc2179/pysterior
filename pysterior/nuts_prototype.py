@@ -62,8 +62,12 @@ def build_tree(point, momentum, slice_edge, direction, j, epsilon, energy):
     leapfrog = sampler.LeapfrogIntegrator(energy.gradient)
     if j == 0:
         p, r = leapfrog.run_leapfrog(point, momentum, 1, direction*epsilon)
-        candidate_n = I(slice_edge < math.exp(energy.eval(p) - (0.5 * r**2)))
-        candidate_s = I(energy.eval(p) - (0.5 * r**2) > math.log(slice_edge) - 1000)
+        if slice_edge > 0: #TODO: This is an ugly hack; find a numerically stable solution or hide it when we refactor
+            candidate_n = I(slice_edge < math.exp(energy.eval(p) - (0.5 * r**2)))
+            candidate_s = I(energy.eval(p) - (0.5 * r**2) > math.log(slice_edge) - 1000)
+        else:
+            candidate_n = 1
+            candidate_s = 1
         return p, r, p, r, p, candidate_n, candidate_s
     else:
         back, back_momentum, forward, forward_momentum, candidate_point, candidate_n, candidate_s = build_tree(point, momentum, slice_edge, direction, j-1, epsilon, energy)
@@ -85,7 +89,7 @@ def I(statement):
         return 0
 
 energy = GaussianEnergyClosure(0.0, 5.0)
-samples = nuts3(50.0, 0.07, energy, 5000)
+samples = nuts3(100.0, 0.07, energy, 5000)
 print(samples)
 plt.hist(samples, bins=100, normed=True)
 plt.show()
