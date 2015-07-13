@@ -27,10 +27,10 @@ class GaussianEnergyClosure(object):
     def gradient(self, x):
         return self.delegate_energy.gradient(x, self.mu, self.sigma)
 
-def nuts3(initial_point, epsilon, energy, iterations):
+def nuts3(initial_point, epsilon, energy, iterations, burn_in=0):
     samples = []
     current_sample = initial_point
-    for i in range(iterations):
+    for i in range(iterations+burn_in):
         momentum = np.random.normal()
         total_energy = energy.eval(current_sample) - (0.5*(momentum*momentum))
         slice_edge = random.uniform(0, math.exp(total_energy))
@@ -53,7 +53,8 @@ def nuts3(initial_point, epsilon, energy, iterations):
             n = n + candidate_n
             s = candidate_s * I((forward - back) * back_momentum > 0) * I((forward - back) * forward_momentum > 0)
             j += 1
-        samples.append(next_sample)
+        if i > burn_in:
+            samples.append(next_sample)
         current_sample = next_sample
     return samples
 
@@ -89,7 +90,7 @@ def I(statement):
         return 0
 
 energy = GaussianEnergyClosure(0.0, 5.0)
-samples = nuts3(100.0, 0.07, energy, 5000)
+samples = nuts3(100.0, 0.05, energy, 25000, burn_in=100)
 print(samples)
 plt.hist(samples, bins=100, normed=True)
 plt.show()
