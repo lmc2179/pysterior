@@ -66,13 +66,13 @@ def build_tree(point, momentum, slice_edge, direction, j, epsilon, energy):
         candidate_s = I(energy.eval(p) - (0.5 * r**2) > math.log(slice_edge) - 1000)
         return p, r, p, r, p, candidate_n, candidate_s
     else:
-        forward, forward_momentum, back, back_momentum, candidate_point, candidate_n, candidate_s = build_tree(point, momentum, slice_edge, direction, j-1, epsilon, energy)
+        back, back_momentum, forward, forward_momentum, candidate_point, candidate_n, candidate_s = build_tree(point, momentum, slice_edge, direction, j-1, epsilon, energy)
         if candidate_s:
             if direction == 1:
                 _, _, forward, forward_momentum, candidate_point_2, candidate_n_2, candidate_s_2 = build_tree(forward, forward_momentum, slice_edge, direction, j-1, epsilon, energy)
             else:
                 back, back_momentum, _, _, candidate_point_2, candidate_n_2, candidate_s_2 = build_tree(back, back_momentum, slice_edge, direction, j-1, epsilon, energy)
-            if random.random() < (candidate_n_2 / (candidate_n_2 + candidate_n)):
+            if candidate_n_2 > 0 and random.random() < (candidate_n_2 / (candidate_n_2 + candidate_n)):
                 candidate_point = candidate_point_2
             candidate_s = candidate_s_2 * I((forward - back) * back_momentum > 0) * I((forward - back) * forward_momentum > 0)
             candidate_n = candidate_n + candidate_n_2
@@ -82,10 +82,10 @@ def I(statement):
     if statement == True:
         return 1
     else:
-        return False
+        return 0
 
 energy = GaussianEnergyClosure(0.0, 5.0)
-samples = nuts3(10.0, 0.1, energy, 1000)
+samples = nuts3(50.0, 0.07, energy, 5000)
 print(samples)
 plt.hist(samples, bins=100, normed=True)
 plt.show()
