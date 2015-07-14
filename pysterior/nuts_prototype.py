@@ -44,11 +44,24 @@ class LeapfrogIntegrator(object):
         return value, momentum
 
 class Nuts3(object):
-    def nuts3(self, initial_point, epsilon, energy, iterations, burn_in=0):
+    def _select_heuristic_epsilon(self, energy, initial_point):
+        epsilon = 1
+        momentum = self._sample_momentum()
+        leapfrog = LeapfrogIntegrator(energy.gradient)
+        next_point, next_momentum = leapfrog.run_leapfrog(initial_point, momentum, 1, epsilon)
+        a = 2*I(self._get_log_probability(energy, initial_point, momentum) - self._get_log_probability(energy, next_point, next_momentum) > math.log(0.5)) - 1
+        while(a*((self._get_log_probability(energy, initial_point, momentum) - self._get_log_probability(energy, next_point, next_momentum))) > math.log(2**-a)):
+            epsilon = (2**a) * epsilon
+            next_point, next_momentum = leapfrog.run_leapfrog(initial_point, momentum, 1, epsilon)
+        return epsilon
+
+    def nuts3(self, initial_point, energy, iterations, burn_in=0):
+        epsilon = self._select_heuristic_epsilon(energy, initial_point)
+        print('Selected epsilon = ', epsilon)
         samples = []
         current_sample = initial_point
         for i in range(iterations+burn_in):
-            momentum = np.random.normal()
+            momentum = self._sample_momentum()
             slice_edge = random.uniform(0, self._get_probability(energy, current_sample, momentum))
             forward = back = current_sample
             forward_momentum = back_momentum = momentum
@@ -99,8 +112,15 @@ class Nuts3(object):
                 candidate_n = candidate_n + candidate_n_2
             return back, back_momentum, forward, forward_momentum, candidate_point, candidate_n, candidate_no_u_turn
 
+    def _sample_momentum(self):
+        return np.random.normal()
+
     def _get_probability(self, energy, p, r):
         return math.exp(energy.eval(p) - (0.5 * r ** 2))
+
+    def _get_log_probability(self, energy, p, r):
+        return energy.eval(p) - (0.5 * r ** 2)
+
 
 def I(statement):
     if statement == True:
@@ -109,7 +129,7 @@ def I(statement):
         return 0
 
 energy = GaussianEnergyClosure(0.0, 5.0)
-samples = Nuts3().nuts3(100.0, 0.1, energy, 4000, burn_in=100)
+samples = Nuts3().nuts3(100.0, energy, 4000, burn_in=100)
 # print(samples)
 # print(shapiro(samples))
 plt.hist(samples, bins=100, normed=True)
