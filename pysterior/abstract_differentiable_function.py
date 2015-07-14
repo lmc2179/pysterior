@@ -5,8 +5,9 @@ class AbstractDifferentiableFunction(object):
     def __init__(self):
         differentiable_argument, other_arguments, output = self._get_variables()
         all_arguments = differentiable_argument + other_arguments
-        self.function = theano.function(all_arguments, output)
-        self.function_gradient =theano.function(all_arguments, theano.grad(output, differentiable_argument))
+        self.function = theano.function(all_arguments, output, allow_input_downcast=True)
+        self.function_gradient =theano.function(all_arguments, theano.grad(output, differentiable_argument),
+                                                allow_input_downcast=True)
         if len(differentiable_argument) == 1 and differentiable_argument[0].ndim == 0:
             self.gradient = self._univariate_gradient
 
