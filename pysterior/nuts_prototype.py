@@ -68,7 +68,7 @@ class Nuts3(object):
                     if random.random() < prob:
                         next_sample = candidate_point
                 n = n + candidate_n
-                no_u_turn = candidate_no_u_turn and I((forward - back) * back_momentum > 0) and I((forward - back) * forward_momentum > 0)
+                no_u_turn = candidate_no_u_turn and ((forward - back) * back_momentum > 0) and ((forward - back) * forward_momentum > 0)
                 j += 1
             if i > burn_in:
                 samples.append(next_sample)
@@ -82,7 +82,7 @@ class Nuts3(object):
             p, r = leapfrog.run_leapfrog(point, momentum, 1, direction*epsilon)
             if slice_edge > 0: #TODO: This is an ugly hack; find a numerically stable solution or hide it when we refactor
                 candidate_n = I(slice_edge < math.exp(energy.eval(p) - (0.5 * r**2)))
-                candidate_no_u_turn = I(energy.eval(p) - (0.5 * r**2) > math.log(slice_edge) - 1000)
+                candidate_no_u_turn = (energy.eval(p) - (0.5 * r**2) > math.log(slice_edge) - 1000)
             else:
                 candidate_n = 1
                 candidate_no_u_turn = True
@@ -96,15 +96,15 @@ class Nuts3(object):
                     back, back_momentum, _, _, candidate_point_2, candidate_n_2, candidate_2_no_u_turn = self._build_tree(back, back_momentum, slice_edge, direction, j-1, epsilon, energy)
                 if candidate_n_2 > 0 and random.random() < (candidate_n_2 / (candidate_n_2 + candidate_n)):
                     candidate_point = candidate_point_2
-                candidate_no_u_turn = candidate_2_no_u_turn and I((forward - back) * back_momentum > 0) and I((forward - back) * forward_momentum > 0)
+                candidate_no_u_turn = candidate_2_no_u_turn and ((forward - back) * back_momentum > 0) and ((forward - back) * forward_momentum > 0)
                 candidate_n = candidate_n + candidate_n_2
             return back, back_momentum, forward, forward_momentum, candidate_point, candidate_n, candidate_no_u_turn
 
 def I(statement):
     if statement == True:
-        return True
+        return 1
     else:
-        return False
+        return 0
 
 energy = GaussianEnergyClosure(0.0, 5.0)
 samples = Nuts3().nuts3(100.0, 0.1, energy, 4000, burn_in=100)
