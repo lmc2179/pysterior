@@ -49,8 +49,7 @@ class Nuts3(object):
         current_sample = initial_point
         for i in range(iterations+burn_in):
             momentum = np.random.normal()
-            total_energy = energy.eval(current_sample) - (0.5*(momentum*momentum))
-            slice_edge = random.uniform(0, math.exp(total_energy))
+            slice_edge = random.uniform(0, self._get_probability(energy, current_sample, momentum))
             forward = back = current_sample
             forward_momentum = back_momentum = momentum
             next_sample = current_sample
@@ -81,8 +80,8 @@ class Nuts3(object):
         if j == 0:
             p, r = leapfrog.run_leapfrog(point, momentum, 1, direction*epsilon)
             if slice_edge > 0: #TODO: This is an ugly hack; find a numerically stable solution or hide it when we refactor
-                candidate_n = I(slice_edge < math.exp(energy.eval(p) - (0.5 * r**2)))
-                candidate_no_u_turn = (energy.eval(p) - (0.5 * r**2) > math.log(slice_edge) - 1000)
+                candidate_n = I(slice_edge < self._get_probability(energy, p, r))
+                candidate_no_u_turn = (self._get_probability(energy, p, r) > math.log(slice_edge) - 1000)
             else:
                 candidate_n = 1
                 candidate_no_u_turn = True
@@ -99,6 +98,9 @@ class Nuts3(object):
                 candidate_no_u_turn = candidate_2_no_u_turn and ((forward - back) * back_momentum > 0) and ((forward - back) * forward_momentum > 0)
                 candidate_n = candidate_n + candidate_n_2
             return back, back_momentum, forward, forward_momentum, candidate_point, candidate_n, candidate_no_u_turn
+
+    def _get_probability(self, energy, p, r):
+        return math.exp(energy.eval(p) - (0.5 * r ** 2))
 
 def I(statement):
     if statement == True:
