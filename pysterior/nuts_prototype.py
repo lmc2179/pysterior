@@ -27,70 +27,88 @@ class GaussianEnergyClosure(object):
     def gradient(self, x):
         return self.delegate_energy.gradient(x, self.mu, self.sigma)
 
-def nuts3(initial_point, epsilon, energy, iterations, burn_in=0):
-    samples = []
-    current_sample = initial_point
-    for i in range(iterations+burn_in):
-        momentum = np.random.normal()
-        total_energy = energy.eval(current_sample) - (0.5*(momentum*momentum))
-        slice_edge = random.uniform(0, math.exp(total_energy))
-        forward = back = current_sample
-        forward_momentum = back_momentum = momentum
-        next_sample = current_sample
-        n = 1
-        s = 1
-        j = 0
-        while s == 1:
-            direction = random.choice([-1, 1])
-            if direction == 1:
-                _, _, forward, forward_momentum, candidate_point, candidate_n, candidate_s = build_tree(forward, forward_momentum, slice_edge, direction, j, epsilon, energy)
-            else:
-                back, back_momentum, _, _, candidate_point, candidate_n, candidate_s = build_tree(back, back_momentum, slice_edge, direction, j, epsilon, energy)
-            if candidate_s == 1:
-                prob = min(1.0, 1.0*candidate_n/n)
-                if random.random() < prob:
-                    next_sample = candidate_point
-            n = n + candidate_n
-            s = candidate_s * I((forward - back) * back_momentum > 0) * I((forward - back) * forward_momentum > 0)
-            j += 1
-        if i > burn_in:
-            samples.append(next_sample)
-        current_sample = next_sample
-    return samples
+class LeapfrogIntegrator(object):
+    def __init__(self, target_energy_gradient):
+        self.target_energy_gradient = target_energy_gradient
 
-@functools.lru_cache()
-def build_tree(point, momentum, slice_edge, direction, j, epsilon, energy):
-    leapfrog = sampler.LeapfrogIntegrator(energy.gradient)
-    if j == 0:
-        p, r = leapfrog.run_leapfrog(point, momentum, 1, direction*epsilon)
-        if slice_edge > 0: #TODO: This is an ugly hack; find a numerically stable solution or hide it when we refactor
-            candidate_n = I(slice_edge < math.exp(energy.eval(p) - (0.5 * r**2)))
-            candidate_s = I(energy.eval(p) - (0.5 * r**2) > math.log(slice_edge) - 1000)
-        else:
-            candidate_n = 1
-            candidate_s = 1
-        return p, r, p, r, p, candidate_n, candidate_s
-    else:
-        back, back_momentum, forward, forward_momentum, candidate_point, candidate_n, candidate_s = build_tree(point, momentum, slice_edge, direction, j-1, epsilon, energy)
-        if candidate_s:
-            if direction == 1:
-                _, _, forward, forward_momentum, candidate_point_2, candidate_n_2, candidate_s_2 = build_tree(forward, forward_momentum, slice_edge, direction, j-1, epsilon, energy)
+    def _leapfrog_step(self, value, momentum, step_size):
+        half_step_momentum = momentum + (step_size*0.5*self.target_energy_gradient(value))
+        step_value = value + (step_size*half_step_momentum)
+        step_momentum = half_step_momentum + (step_size*0.5*self.target_energy_gradient(step_value))
+        return step_value, step_momentum
+
+    def run_leapfrog(self, current_value, current_momentum, num_steps, step_size):
+        value, momentum = current_value, current_momentum
+        for i in range(num_steps):
+            value,momentum = self._leapfrog_step(value, momentum, step_size)
+        return value, momentum
+
+class Nuts3(object):
+    def nuts3(self, initial_point, epsilon, energy, iterations, burn_in=0):
+        samples = []
+        current_sample = initial_point
+        for i in range(iterations+burn_in):
+            momentum = np.random.normal()
+            total_energy = energy.eval(current_sample) - (0.5*(momentum*momentum))
+            slice_edge = random.uniform(0, math.exp(total_energy))
+            forward = back = current_sample
+            forward_momentum = back_momentum = momentum
+            next_sample = current_sample
+            n = 1
+            no_u_turn = True
+            j = 0
+            while no_u_turn:
+                direction = random.choice([-1, 1])
+                if direction == 1:
+                    _, _, forward, forward_momentum, candidate_point, candidate_n, candidate_no_u_turn = self._build_tree(forward, forward_momentum, slice_edge, direction, j, epsilon, energy)
+                else:
+                    back, back_momentum, _, _, candidate_point, candidate_n, candidate_no_u_turn = self._build_tree(back, back_momentum, slice_edge, direction, j, epsilon, energy)
+                if candidate_no_u_turn:
+                    prob = min(1.0, 1.0*candidate_n/n)
+                    if random.random() < prob:
+                        next_sample = candidate_point
+                n = n + candidate_n
+                no_u_turn = candidate_no_u_turn and I((forward - back) * back_momentum > 0) and I((forward - back) * forward_momentum > 0)
+                j += 1
+            if i > burn_in:
+                samples.append(next_sample)
+            current_sample = next_sample
+        return samples
+
+    @functools.lru_cache()
+    def _build_tree(self, point, momentum, slice_edge, direction, j, epsilon, energy):
+        leapfrog = LeapfrogIntegrator(energy.gradient)
+        if j == 0:
+            p, r = leapfrog.run_leapfrog(point, momentum, 1, direction*epsilon)
+            if slice_edge > 0: #TODO: This is an ugly hack; find a numerically stable solution or hide it when we refactor
+                candidate_n = I(slice_edge < math.exp(energy.eval(p) - (0.5 * r**2)))
+                candidate_no_u_turn = I(energy.eval(p) - (0.5 * r**2) > math.log(slice_edge) - 1000)
             else:
-                back, back_momentum, _, _, candidate_point_2, candidate_n_2, candidate_s_2 = build_tree(back, back_momentum, slice_edge, direction, j-1, epsilon, energy)
-            if candidate_n_2 > 0 and random.random() < (candidate_n_2 / (candidate_n_2 + candidate_n)):
-                candidate_point = candidate_point_2
-            candidate_s = candidate_s_2 * I((forward - back) * back_momentum > 0) * I((forward - back) * forward_momentum > 0)
-            candidate_n = candidate_n + candidate_n_2
-        return back, back_momentum, forward, forward_momentum, candidate_point, candidate_n, candidate_s
+                candidate_n = 1
+                candidate_no_u_turn = True
+            return p, r, p, r, p, candidate_n, candidate_no_u_turn
+        else:
+            back, back_momentum, forward, forward_momentum, candidate_point, candidate_n, candidate_no_u_turn = self._build_tree(point, momentum, slice_edge, direction, j-1, epsilon, energy)
+            if candidate_no_u_turn:
+                if direction == 1:
+                    _, _, forward, forward_momentum, candidate_point_2, candidate_n_2, candidate_2_no_u_turn = self._build_tree(forward, forward_momentum, slice_edge, direction, j-1, epsilon, energy)
+                else:
+                    back, back_momentum, _, _, candidate_point_2, candidate_n_2, candidate_2_no_u_turn = self._build_tree(back, back_momentum, slice_edge, direction, j-1, epsilon, energy)
+                if candidate_n_2 > 0 and random.random() < (candidate_n_2 / (candidate_n_2 + candidate_n)):
+                    candidate_point = candidate_point_2
+                candidate_no_u_turn = candidate_2_no_u_turn and I((forward - back) * back_momentum > 0) and I((forward - back) * forward_momentum > 0)
+                candidate_n = candidate_n + candidate_n_2
+            return back, back_momentum, forward, forward_momentum, candidate_point, candidate_n, candidate_no_u_turn
 
 def I(statement):
     if statement == True:
-        return 1
+        return True
     else:
-        return 0
+        return False
 
 energy = GaussianEnergyClosure(0.0, 5.0)
-samples = nuts3(100.0, 0.05, energy, 25000, burn_in=100)
-print(samples)
+samples = Nuts3().nuts3(100.0, 0.1, energy, 4000, burn_in=100)
+# print(samples)
+# print(shapiro(samples))
 plt.hist(samples, bins=100, normed=True)
 plt.show()
