@@ -4,7 +4,6 @@ import numpy as np
 import random
 import math
 import functools
-import sampler
 import matplotlib.pyplot as plt
 
 class GaussianEnergy(abstract_differentiable_function.AbstractDifferentiableFunction):
@@ -43,19 +42,19 @@ class LeapfrogIntegrator(object):
             value,momentum = self._leapfrog_step(value, momentum, step_size)
         return value, momentum
 
-class Nuts3(object):
+class NUTS(object):
     def _select_heuristic_epsilon(self, energy, initial_point):
         epsilon = 1
         momentum = self._sample_momentum()
         leapfrog = LeapfrogIntegrator(energy.gradient)
         next_point, next_momentum = leapfrog.run_leapfrog(initial_point, momentum, 1, epsilon)
-        a = 2*I(self._get_log_probability(energy, initial_point, momentum) - self._get_log_probability(energy, next_point, next_momentum) > math.log(0.5)) - 1
+        a = 2*self.I(self._get_log_probability(energy, initial_point, momentum) - self._get_log_probability(energy, next_point, next_momentum) > math.log(0.5)) - 1
         while(a*((self._get_log_probability(energy, initial_point, momentum) - self._get_log_probability(energy, next_point, next_momentum))) > math.log(2**-a)):
             epsilon = (2**a) * epsilon
             next_point, next_momentum = leapfrog.run_leapfrog(initial_point, momentum, 1, epsilon)
         return epsilon
 
-    def nuts3(self, initial_point, energy, iterations, burn_in=0):
+    def nuts_with_initial_epsilon(self, initial_point, energy, iterations, burn_in=0):
         epsilon = self._select_heuristic_epsilon(energy, initial_point)
         print('Selected epsilon = ', epsilon)
         samples = []
@@ -93,7 +92,7 @@ class Nuts3(object):
         if j == 0:
             p, r = leapfrog.run_leapfrog(point, momentum, 1, direction*epsilon)
             if slice_edge > 0: #TODO: This is an ugly hack; find a numerically stable solution or hide it when we refactor
-                candidate_n = I(slice_edge < self._get_probability(energy, p, r))
+                candidate_n = self.I(slice_edge < self._get_probability(energy, p, r))
                 candidate_no_u_turn = (self._get_probability(energy, p, r) > math.log(slice_edge) - 1000)
             else:
                 candidate_n = 1
@@ -121,15 +120,14 @@ class Nuts3(object):
     def _get_log_probability(self, energy, p, r):
         return energy.eval(p) - (0.5 * r ** 2)
 
-
-def I(statement):
-    if statement == True:
-        return 1
-    else:
-        return 0
+    def I(self, statement):
+        if statement == True:
+            return 1
+        else:
+            return 0
 
 energy = GaussianEnergyClosure(0.0, 5.0)
-samples = Nuts3().nuts3(100.0, energy, 4000, burn_in=100)
+samples = NUTS().nuts_with_initial_epsilon(100.0, energy, 5000, burn_in=100)
 # print(samples)
 # print(shapiro(samples))
 plt.hist(samples, bins=100, normed=True)
