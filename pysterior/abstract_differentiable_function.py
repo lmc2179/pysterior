@@ -8,8 +8,6 @@ class AbstractDifferentiableFunction(object):
         self.function = theano.function(all_arguments, output, allow_input_downcast=True)
         self.function_gradient =theano.function(all_arguments, theano.grad(output, differentiable_argument),
                                                 allow_input_downcast=True)
-        if len(differentiable_argument) == 1 and differentiable_argument[0].ndim == 0:
-            self.gradient = self._univariate_gradient
 
     def _get_variables(self):
         """Returns a tuple of:
@@ -25,7 +23,4 @@ class AbstractDifferentiableFunction(object):
 
     def gradient(self, *args):
         "Evaluate the function's gradient - arguments are assumed to be the same order as in _get_variables."
-        return self.function_gradient(*args)
-
-    def _univariate_gradient(self, *args):
         return self.function_gradient(*args)[0]
