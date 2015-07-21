@@ -14,17 +14,37 @@ class GaussianEnergy(abstract_differentiable_function.AbstractDifferentiableFunc
         y = -(X - mu)**2 * (1.0/sigma)
         return [X], [mu, sigma], y
 
-class GaussianEnergyClosure(object):
+class MultivariateNormalEnergy(abstract_differentiable_function.AbstractDifferentiableFunction):
+    def _get_variables(self):
+        X = T.vector('x')
+        mu = T.vector('mu')
+        sigma = T.matrix('sigma')
+        inv_covariance = sigma
+        y = -0.5*T.dot(T.dot((X-mu).T, inv_covariance), (X-mu))
+        return [X], [mu, sigma], y
+
+class AbstractEnergyClosure(object):
     def __init__(self, mu, sigma):
         self.mu = mu
         self.sigma = sigma
-        self.delegate_energy = GaussianEnergy()
+        self.delegate_energy = self._get_delegate_energy()
+
+    def _get_delegate_energy(self):
+        raise NotImplementedError
 
     def eval(self, x):
         return self.delegate_energy.eval(x, self.mu, self.sigma)
 
     def gradient(self, x):
         return self.delegate_energy.gradient(x, self.mu, self.sigma)
+
+class MultivariateNormalEnergyClosure(AbstractEnergyClosure):
+    def _get_delegate_energy(self):
+        return MultivariateNormalEnergy()
+
+class GaussianEnergyClosure(AbstractEnergyClosure):
+    def _get_delegate_energy(self):
+        return GaussianEnergy()
 
 class LeapfrogIntegrator(object):
     def __init__(self, target_energy_gradient):
@@ -43,9 +63,9 @@ class LeapfrogIntegrator(object):
         return value, momentum
 
 class NUTS(object):
-    def _select_heuristic_epsilon(self, energy, initial_point):
-        epsilon = 1
-        momentum = self._sample_momentum()
+    def _select_heuristic_epsilon(self, energy, initial_point): #TODO: Something strange is happening here
+        epsilon = 2**(-10)
+        momentum = self._sample_momentum(len(initial_point))
         leapfrog = LeapfrogIntegrator(energy.gradient)
         next_point, next_momentum = leapfrog.run_leapfrog(initial_point, momentum, 1, epsilon)
         a = 2*self.I(self._get_log_probability(energy, initial_point, momentum) - self._get_log_probability(energy, next_point, next_momentum) > math.log(0.5)) - 1
@@ -56,11 +76,12 @@ class NUTS(object):
 
     def nuts_with_initial_epsilon(self, initial_point, energy, iterations, burn_in=0):
         epsilon = self._select_heuristic_epsilon(energy, initial_point)
+        dimension = len(initial_point)
         print('Selected epsilon = ', epsilon)
         samples = []
         current_sample = initial_point
         for i in range(iterations+burn_in):
-            momentum = self._sample_momentum()
+            momentum = self._sample_momentum(dimension)
             slice_edge = random.uniform(0, self._get_probability(energy, current_sample, momentum))
             forward = back = current_sample
             forward_momentum = back_momentum = momentum
@@ -79,14 +100,13 @@ class NUTS(object):
                     if random.random() < prob:
                         next_sample = candidate_point
                 n = n + candidate_n
-                no_u_turn = candidate_no_u_turn and ((forward - back) * back_momentum > 0) and ((forward - back) * forward_momentum > 0)
+                no_u_turn = candidate_no_u_turn and (np.dot((forward - back) , back_momentum) > 0) and (np.dot((forward - back) , forward_momentum) > 0)
                 j += 1
             if i > burn_in:
                 samples.append(next_sample)
             current_sample = next_sample
         return samples
 
-    @functools.lru_cache()
     def _build_tree(self, point, momentum, slice_edge, direction, j, epsilon, energy):
         leapfrog = LeapfrogIntegrator(energy.gradient)
         if j == 0:
@@ -107,18 +127,18 @@ class NUTS(object):
                     back, back_momentum, _, _, candidate_point_2, candidate_n_2, candidate_2_no_u_turn = self._build_tree(back, back_momentum, slice_edge, direction, j-1, epsilon, energy)
                 if candidate_n_2 > 0 and random.random() < (candidate_n_2 / (candidate_n_2 + candidate_n)):
                     candidate_point = candidate_point_2
-                candidate_no_u_turn = candidate_2_no_u_turn and ((forward - back) * back_momentum > 0) and ((forward - back) * forward_momentum > 0)
+                candidate_no_u_turn = candidate_2_no_u_turn and (np.dot((forward - back) , back_momentum) > 0) and (np.dot((forward - back) , forward_momentum) > 0)
                 candidate_n = candidate_n + candidate_n_2
             return back, back_momentum, forward, forward_momentum, candidate_point, candidate_n, candidate_no_u_turn
 
-    def _sample_momentum(self):
-        return np.random.normal()
+    def _sample_momentum(self, dimension):
+        return np.random.normal(size=dimension)
 
     def _get_probability(self, energy, p, r):
-        return math.exp(energy.eval(p) - (0.5 * r ** 2))
+        return math.exp(energy.eval(p) - (0.5 * np.dot(r,r)))
 
     def _get_log_probability(self, energy, p, r):
-        return energy.eval(p) - (0.5 * r ** 2)
+        return energy.eval(p) - (0.5 * np.dot(r,r))
 
     def I(self, statement):
         if statement == True:
@@ -126,9 +146,10 @@ class NUTS(object):
         else:
             return 0
 
-energy = GaussianEnergyClosure(0.0, 5.0)
-samples = NUTS().nuts_with_initial_epsilon(100.0, energy, 5000, burn_in=100)
-# print(samples)
+# energy = GaussianEnergyClosure(0.0, 5.0)
+energy = MultivariateNormalEnergyClosure(np.array([0.0, 0.0]), np.linalg.inv(np.eye(2)))
+samples = NUTS().nuts_with_initial_epsilon(np.array([0.0, 0.0]), energy, 1000, burn_in=100)
+print(samples)
 # print(shapiro(samples))
-plt.hist(samples, bins=100, normed=True)
+plt.plot(*zip(*samples), marker='.', linewidth=0.0)
 plt.show()
