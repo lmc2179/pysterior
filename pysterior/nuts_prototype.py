@@ -147,8 +147,8 @@ class NUTS(object):
             return 0
 
 # energy = GaussianEnergyClosure(0.0, 5.0)
-energy = MultivariateNormalEnergyClosure(np.array([0.0, 0.0]), np.linalg.inv(np.eye(2)))
-samples = NUTS().nuts_with_initial_epsilon(np.array([0.0, 0.0]), energy, 1000, burn_in=100)
+energy = MultivariateNormalEnergyClosure(np.array([0.0, 0.0]), np.linalg.inv(np.array([[10,10],[0,10]])))
+samples = NUTS().nuts_with_initial_epsilon(np.array([100.0, 100.0]), energy, 9000, burn_in=100)
 print(samples)
 # print(shapiro(samples))
 plt.plot(*zip(*samples), marker='.', linewidth=0.0)
