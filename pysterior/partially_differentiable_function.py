@@ -28,5 +28,21 @@ f, a_grad = factory.get_partial_diff('a')
 
 print(f(a=2, b=2))
 
+def build_kwarg_closure(f, bound_kwargs):
+    def partial_fxn(**kwargs):
+        full_kwargs = {}
+        full_kwargs.update(bound_kwargs)
+        full_kwargs.update(kwargs)
+        return f(**full_kwargs)
+    return partial_fxn
+
+def sum_dict(a, b):
+    return a+b
+
+add_one = build_kwarg_closure(sum_dict, {'a': 1})
+print(add_one(b=100))
+
+
+
 #Note kwargs implicit, see f.input_storage
 #TODO: Write a closure generator for kwarg functions produced by the factory
