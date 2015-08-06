@@ -16,13 +16,19 @@ class PartiallyDiffFunctionFactoryTest(unittest.TestCase):
         self.assertEqual(a_grad(a=1.0, b=2.0), 2.0)
 
 class TestClosure(unittest.TestCase):
-    def test_sum(self):
+    def test_sum_kwarg_closure(self):
         def sum_dict(a, b):
             return a+b
 
         add_one = partially_differentiable_function.build_kwarg_closure(sum_dict, {'a': 1})
         self.assertEqual(add_one(b=100), 101)
 
+    def test_sum_arg_closure(self):
+        def sum_dict(a, b):
+            return a+b
+
+        add_one = partially_differentiable_function.build_arg_closure(sum_dict, {'a': 1}, 'b')
+        self.assertEqual(add_one(100), 101)
 
 class EnergyClosureFactorytest(unittest.TestCase):
     pass #Direct sampling of gaussian vs prior+evidence sampling
