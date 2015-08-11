@@ -4,10 +4,19 @@ from collections import namedtuple
 
 FunctionSpec = namedtuple('FunctionSpec', ['variables', 'output_expression'])
 
-class PartiallyDifferentiableFunctionFactory(object): #TODO: Compose to make direct sampling energy factory
+Energy = namedtuple('Energy', ['eval', 'grad'])
+
+def get_unit_normal_spec():
+    X,mu = [T.vector('X'), T.vector('mu')]
+    UnitSphereGaussianDensitySpec = FunctionSpec(variables=[X, mu],
+                                       output_expression =  -0.5*T.dot((X-mu).T, (X-mu)))
+    return UnitSphereGaussianDensitySpec
+
+class PartiallyDifferentiableFunctionFactory(object):
     def __init__(self, func_spec):
         self.f = theano.function(func_spec.variables,
-                                 func_spec.output_expression)
+                                 func_spec.output_expression,
+                                 allow_input_downcast=True)
         self.variables = func_spec.variables
         self.var_lookup = {v.name:v for v in func_spec.variables}
         self.output_expression = func_spec.output_expression
@@ -16,7 +25,8 @@ class PartiallyDifferentiableFunctionFactory(object): #TODO: Compose to make dir
         diff_var = self.var_lookup[differentiable_var_name]
         grad = theano.function(self.variables,
                                theano.grad(self.output_expression,
-                                           diff_var))
+                                           diff_var),
+                               allow_input_downcast=True)
         return self.f, grad
 
 def build_kwarg_closure(f, bound_kwargs):
