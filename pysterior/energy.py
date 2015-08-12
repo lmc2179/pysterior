@@ -9,11 +9,10 @@ FunctionSpec = namedtuple('FunctionSpec', ['variables', 'output_expression'])
 
 Energy = namedtuple('Energy', ['eval', 'gradient'])
 
-def get_normal_spec(covariance_matrix):
-    X,mu = [T.vector('X'), T.vector('mu')]
-    inv_covariance = np.linalg.inv(covariance_matrix)
-    GaussianDensitySpec = FunctionSpec(variables=[X, mu],
-                                       output_expression =  -0.5*T.dot(T.dot((X-mu).T, inv_covariance), (X-mu)))
+def get_normal_spec():
+    X,mu,inv_sigma = [T.vector('X'), T.vector('mu'), T.matrix('inv_sigma')]
+    GaussianDensitySpec = FunctionSpec(variables=[X, mu, inv_sigma],
+                                       output_expression = -0.5*T.dot(T.dot((X-mu).T, inv_sigma), (X-mu)))
     return GaussianDensitySpec
 
 class PartiallyDifferentiableFunctionFactory(object):
