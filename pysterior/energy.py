@@ -1,5 +1,6 @@
 from theano import tensor as T
 import theano
+from theano.tensor import nlinalg
 from collections import namedtuple
 import numpy as np
 X = 'X'
@@ -10,9 +11,9 @@ FunctionSpec = namedtuple('FunctionSpec', ['variables', 'output_expression'])
 Energy = namedtuple('Energy', ['eval', 'gradient'])
 
 def get_normal_spec():
-    X,mu,inv_sigma = [T.vector('X'), T.vector('mu'), T.matrix('inv_sigma')]
-    GaussianDensitySpec = FunctionSpec(variables=[X, mu, inv_sigma],
-                                       output_expression = -0.5*T.dot(T.dot((X-mu).T, inv_sigma), (X-mu)))
+    X,mu,sigma = [T.vector('X'), T.vector('mu'), T.matrix('sigma')]
+    GaussianDensitySpec = FunctionSpec(variables=[X, mu, sigma],
+                                       output_expression = -0.5*T.dot(T.dot((X-mu).T, nlinalg.matrix_inverse(sigma)), (X-mu)))
     return GaussianDensitySpec
 
 class PartiallyDifferentiableFunctionFactory(object):
