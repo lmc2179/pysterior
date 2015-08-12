@@ -1,13 +1,24 @@
-import unittest
-from pysterior import energy
 import numpy as np
+import matplotlib.pyplot as plt
 
-#TODO: Roll this into a factory
-fxn_spec = energy.get_unit_normal_spec()
-factory = energy.PartiallyDifferentiableFunctionFactory(fxn_spec)
-f, grad = factory.get_partial_diff('X')
-f_closure = energy.build_arg_closure(f, {'mu': np.array([0.0, 0.0])}, 'X')
-grad_closure = energy.build_arg_closure(grad, {'mu': np.array([0.0, 0.0])}, 'X')
-data = [np.array([x1,x2]) for x1,x2 in [(1,1), (-1,-1), (1,-1), (-1, 1)]]
-for d in data:
-    print(d, f_closure(d), grad_closure(d))
+from energy import DirectSamplingFactory
+from pysterior import energy
+from pysterior import sampler
+
+def visualize_spherical_gaussian_direct_sampling():
+    E = DirectSamplingFactory().construct_energy(energy.get_normal_spec(np.eye(2)),
+                                         {'mu': np.array([0.0, 0.0])})
+    samples = sampler.NUTS().nuts_with_initial_epsilon(np.array([100.0, 100.0]), E, 9000, burn_in=100)
+    print(samples)
+    plt.plot(*zip(*samples), marker='.', linewidth=0.0)
+    plt.show()
+
+def visualize_gaussian_direct_sampling():
+    E = DirectSamplingFactory().construct_energy(energy.get_normal_spec(np.array([[10,10],[0,10]])),
+                                         {'mu': np.array([0.0, 0.0])})
+    samples = sampler.NUTS().nuts_with_initial_epsilon(np.array([100.0, 100.0]), E, 9000, burn_in=100)
+    print(samples)
+    plt.plot(*zip(*samples), marker='.', linewidth=0.0)
+    plt.show()
+
+visualize_gaussian_direct_sampling()

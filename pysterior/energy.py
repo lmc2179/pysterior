@@ -1,16 +1,20 @@
 from theano import tensor as T
 import theano
 from collections import namedtuple
+import numpy as np
+X = 'X'
+MU = 'mu'
 
 FunctionSpec = namedtuple('FunctionSpec', ['variables', 'output_expression'])
 
-Energy = namedtuple('Energy', ['eval', 'grad'])
+Energy = namedtuple('Energy', ['eval', 'gradient'])
 
-def get_unit_normal_spec():
+def get_normal_spec(covariance_matrix):
     X,mu = [T.vector('X'), T.vector('mu')]
-    UnitSphereGaussianDensitySpec = FunctionSpec(variables=[X, mu],
-                                       output_expression =  -0.5*T.dot((X-mu).T, (X-mu)))
-    return UnitSphereGaussianDensitySpec
+    inv_covariance = np.linalg.inv(covariance_matrix)
+    GaussianDensitySpec = FunctionSpec(variables=[X, mu],
+                                       output_expression =  -0.5*T.dot(T.dot((X-mu).T, inv_covariance), (X-mu)))
+    return GaussianDensitySpec
 
 class PartiallyDifferentiableFunctionFactory(object):
     def __init__(self, func_spec):
@@ -45,69 +49,12 @@ def build_arg_closure(f, bound_kwargs, unbound_arg_name):
         return f(**full_kwargs)
     return partial_fxn
 
-class AbstractEnergyClosure(object):
-    def __init__(self, mu, sigma):
-        self.mu = mu
-        self.sigma = sigma
-        self.delegate_energy = self._get_delegate_energy()
 
-    def _get_delegate_energy(self):
-        raise NotImplementedError
-
-    def eval(self, x):
-        return self.delegate_energy.eval(x, self.mu, self.sigma)
-
-    def gradient(self, x):
-        return self.delegate_energy.gradient(x, self.mu, self.sigma)
-
-class AbstractDifferentiableFunction(object):
-    def __init__(self):
-        differentiable_argument, other_arguments, output = self._get_variables()
-        all_arguments = differentiable_argument + other_arguments
-        self.function = theano.function(all_arguments, output, allow_input_downcast=True)
-        self.function_gradient =theano.function(all_arguments, theano.grad(output, differentiable_argument),
-                                                allow_input_downcast=True)
-
-    def _get_variables(self):
-        """Returns a tuple of:
-            differential_argument: a vector or list of scalars
-            other_arguments: list of theano variables
-            output: a function of the arguments
-            """
-        raise NotImplementedError
-
-    def eval(self, *args):
-        "Evaluate the function - arguments are assumed to be the same order as in _get_variables."
-        return self.function(*args)
-
-    def gradient(self, *args):
-        "Evaluate the function's gradient - arguments are assumed to be the same order as in _get_variables."
-        return self.function_gradient(*args)[0]
-
-class GaussianEnergy(AbstractDifferentiableFunction): #TODO: Fix these
-    def _get_variables(self):
-        X = T.scalar('x')
-        mu = T.scalar('mu')
-        sigma = T.scalar('sigma')
-        y = -(X - mu)**2 * (1.0/sigma)
-        return [X], [mu, sigma], y
-
-
-class MultivariateNormalEnergy(AbstractDifferentiableFunction):#TODO: Fix these
-    def _get_variables(self):
-        X = T.vector('x')
-        mu = T.vector('mu')
-        sigma = T.matrix('sigma')
-        inv_covariance = sigma
-        y = -0.5*T.dot(T.dot((X-mu).T, inv_covariance), (X-mu))
-        return [X], [mu, sigma], y
-
-
-class MultivariateNormalEnergyClosure(AbstractEnergyClosure): #TODO: Deprecate these
-    def _get_delegate_energy(self):
-        return MultivariateNormalEnergy()
-
-
-class GaussianEnergyClosure(AbstractEnergyClosure): #TODO: Deprecate these
-    def _get_delegate_energy(self):
-        return GaussianEnergy()
+class DirectSamplingFactory(object):
+    def construct_energy(self, fxn_spec, bound_arg_dict):
+        partial_dif = PartiallyDifferentiableFunctionFactory(fxn_spec)
+        f, grad = partial_dif.get_partial_diff(X)
+        f_closure = build_arg_closure(f, bound_arg_dict, X)
+        grad_closure = build_arg_closure(grad, bound_arg_dict, X)
+        return Energy(eval=f_closure,
+                      gradient=grad_closure)
