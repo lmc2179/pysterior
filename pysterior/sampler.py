@@ -58,7 +58,7 @@ class NUTS(object):
                 n = n + candidate_n
                 no_u_turn = candidate_no_u_turn and (np.dot((forward - back) , back_momentum) > 0) and (np.dot((forward - back) , forward_momentum) > 0)
                 j += 1
-            if i > burn_in:
+            if i >= burn_in:
                 samples.append(next_sample)
             current_sample = next_sample
         return samples
