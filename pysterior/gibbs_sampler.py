@@ -15,21 +15,22 @@ class GibbsDirectSampler(object):
         results = [pdiff.get_partial_diff(v) for v in target_variables]
         return results[0][0], [r[1] for r in results] #Clumsy
 
-    def run_sampling(self, iterations, initial_point):
+    def run_sampling(self, iterations, initial_point, burn_in=10):
         X = initial_point
         samples = []
-        for i in range(iterations):
+        for i in range(iterations+burn_in):
             next_X = copy.deepcopy(X)
             for j, var in enumerate(self.target_variables):
                 next_X[j] = self._get_next_sample(var, next_X, j)
-            samples.append(next_X)
+            if i >= burn_in:
+                samples.append(next_X)
             X = next_X
         return samples
 
     def _get_next_sample(self, var_name, current_state, var_index):
         #TODO: Construct the energy function, run a single sample
         E = self._build_energy_function(var_name, current_state, var_index)
-        sample = self.sampler.nuts_with_initial_epsilon(current_state[var_index], E, 1, 0)[0]
+        sample = self.sampler.nuts_with_initial_epsilon(current_state[var_index], E, 1, 2)[0]
         return sample
 
     def _build_energy_function(self, var_name, current_state, var_index):
