@@ -20,13 +20,16 @@ class LeapfrogIntegrator(object):
 
 class NUTS(object):
     MAX_EPSILON = 1024.0
+    DEFAULT_EPSILON = 1.0
     def _select_heuristic_epsilon(self, energy, initial_point):
-        epsilon = 2**(-10) #TODO: Epsilon keeps exploding
+        epsilon = 2**(-10) #TODO: Epsilon keeps exploding, added bandage
         momentum = self._sample_momentum(self._get_dimension(initial_point))
         leapfrog = LeapfrogIntegrator(energy.gradient)
         next_point, next_momentum = leapfrog.run_leapfrog(initial_point, momentum, 1, epsilon)
         a = 2*self.I(self._get_log_probability(energy, initial_point, momentum) - self._get_log_probability(energy, next_point, next_momentum) > math.log(0.5)) - 1
         while(a*((self._get_log_probability(energy, initial_point, momentum) - self._get_log_probability(energy, next_point, next_momentum))) > math.log(2**-a)):
+            if epsilon > self.MAX_EPSILON:
+                return self.DEFAULT_EPSILON
             epsilon = (2**a) * epsilon
             next_point, next_momentum = leapfrog.run_leapfrog(initial_point, momentum, 1, epsilon)
         return epsilon
