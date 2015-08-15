@@ -19,9 +19,10 @@ class LeapfrogIntegrator(object):
         return value, momentum
 
 class NUTS(object):
+    MAX_EPSILON = 1024.0
     def _select_heuristic_epsilon(self, energy, initial_point):
-        epsilon = 2**(-10)
-        momentum = self._sample_momentum(len(initial_point))
+        epsilon = 2**(-10) #TODO: Epsilon keeps exploding
+        momentum = self._sample_momentum(self._get_dimension(initial_point))
         leapfrog = LeapfrogIntegrator(energy.gradient)
         next_point, next_momentum = leapfrog.run_leapfrog(initial_point, momentum, 1, epsilon)
         a = 2*self.I(self._get_log_probability(energy, initial_point, momentum) - self._get_log_probability(energy, next_point, next_momentum) > math.log(0.5)) - 1
@@ -32,7 +33,7 @@ class NUTS(object):
 
     def nuts_with_initial_epsilon(self, initial_point, energy, iterations, burn_in=0):
         epsilon = self._select_heuristic_epsilon(energy, initial_point)
-        dimension = len(initial_point)
+        dimension = self._get_dimension(initial_point)
         print('Selected epsilon = ', epsilon)
         samples = []
         current_sample = initial_point
@@ -88,7 +89,16 @@ class NUTS(object):
             return back, back_momentum, forward, forward_momentum, candidate_point, candidate_n, candidate_no_u_turn
 
     def _sample_momentum(self, dimension):
-        return np.random.normal(size=dimension)
+        if dimension == 0:
+            return np.random.normal()
+        else:
+            return np.random.normal(size=dimension)
+
+    def _get_dimension(self, p):
+        try: #TODO: Remove try/except
+            return len(p)
+        except TypeError:
+            return 0
 
     def _get_probability(self, energy, p, r):
         return math.exp(energy.eval(p) - (0.5 * np.dot(r,r)))

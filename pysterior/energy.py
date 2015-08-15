@@ -16,6 +16,15 @@ def get_normal_spec():
                                        output_expression = -0.5*T.dot(T.dot((X-mu).T, nlinalg.matrix_inverse(sigma)), (X-mu)))
     return GaussianDensitySpec
 
+def get_bivariate_normal_spec():
+    X1,X2,mu,sigma = [T.scalar('X1'),T.scalar('X2'), T.vector('mu'), T.matrix('sigma')]
+    GaussianDensitySpec = FunctionSpec(variables=[X1, X2, mu, sigma],
+                                       output_expression = -0.5*T.dot(T.dot((T.concatenate([X1.dimshuffle('x'),X2.dimshuffle('x')])-mu).T,
+                                                                            nlinalg.matrix_inverse(sigma)),
+                                                                      (T.concatenate([X1.dimshuffle('x'),X2.dimshuffle('x')])-mu)))
+    return GaussianDensitySpec
+
+
 class PartiallyDifferentiableFunctionFactory(object):
     def __init__(self, func_spec):
         self.f = theano.function(func_spec.variables,
