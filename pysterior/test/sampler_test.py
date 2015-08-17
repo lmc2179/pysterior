@@ -3,6 +3,7 @@ from theano import function, grad
 from pysterior.sampler import NUTS
 from pysterior import energy
 import matplotlib.pyplot as plt
+from scipy.stats import shapiro
 import unittest
 
 #TODO: Make these automated tests
@@ -21,9 +22,10 @@ class TestUnivariateDistributions(unittest.TestCase):
         E = energy.Energy(eval=f,
                           gradient=grad_f)
         samples = sampler.nuts_with_initial_epsilon(0.0, E, iterations=10000, burn_in=10)
-        plt.hist(samples, bins=100)
-        plt.show()
+        w,p = shapiro(samples)
+        self.assertGreater(p, 0.01)
 
+    @unittest.skip('')
     def test_laplace(self):
         TRUE_MEAN = -10.0
         TRUE_SCALE = 3.7
