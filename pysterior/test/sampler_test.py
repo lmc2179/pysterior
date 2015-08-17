@@ -1,36 +1,44 @@
-import matplotlib.pyplot as plt
-import numpy as np
-from pysterior.energy import MultivariateNormalEnergyClosure
+import theano.tensor as T
+from theano import function, grad
 from pysterior.sampler import NUTS
-from pysterior import data_model
+from pysterior import energy
+import matplotlib.pyplot as plt
+import unittest
 
-def visualize_gaussian_direct_sampling():
-    # energy = GaussianEnergyClosure(0.0, 5.0)
-    energy = MultivariateNormalEnergyClosure(np.array([0.0, 0.0]), np.linalg.inv(np.array([[10,10],[0,10]])))
-    samples = NUTS().nuts_with_initial_epsilon(np.array([100.0, 100.0]), energy, 9000, burn_in=100)
-    print(samples)
-    # print(shapiro(samples))
-    plt.plot(*zip(*samples), marker='.', linewidth=0.0)
-    plt.show()
+#TODO: Make these automated tests
 
-class AbstractHamiltonianSampler(object):
-    def __init__(self, target_energy=None):
-        self.target_energy = target_energy
+class TestUnivariateDistributions(unittest.TestCase):
+    def test_normal(self):
+        TRUE_MEAN = -10.0
+        TRUE_SIGMA = 3.7
+        sampler = NUTS()
+        X = T.scalar('X')
+        output = -0.5 * ((X - TRUE_MEAN)**2) * (TRUE_SIGMA ** (-2))
+        f = function([X], output, allow_input_downcast=True)
+        grad_f = function([X],
+                          grad(output, X),
+                          allow_input_downcast=True)
+        E = energy.Energy(eval=f,
+                          gradient=grad_f)
+        samples = sampler.nuts_with_initial_epsilon(0.0, E, iterations=10000, burn_in=10)
+        plt.hist(samples, bins=100)
+        plt.show()
 
-    #TODO: Acceptance in abstract class
+    def test_laplace(self):
+        TRUE_MEAN = -10.0
+        TRUE_SCALE = 3.7
+        sampler = NUTS()
+        X = T.scalar('X')
+        output = -1.0 * (abs(X - TRUE_MEAN) / TRUE_SCALE)
+        f = function([X], output, allow_input_downcast=True)
+        grad_f = function([X],
+                          grad(output, X),
+                          allow_input_downcast=True)
+        E = energy.Energy(eval=f,
+                          gradient=grad_f)
+        samples = sampler.nuts_with_initial_epsilon(0.0, E, iterations=10000, burn_in=10)
+        plt.hist(samples, bins=100)
+        plt.show()
 
-    def sample(self, iterations, burn_in=0, thinning=1):
-        raise NotImplementedError
-
-
-class HamiltonianSamplerStub(AbstractHamiltonianSampler):
-    """
-    Trivial class used for testing, which does not utilize the target energy.
-
-    Returns samples from a 3D Gaussian distribution with zero mean and unit sphere covariance.
-    """
-    def sample(self, iterations, burn_in=0, thinning=1):
-        samples = data_model.PosteriorSample()
-        for i in range(iterations):
-            samples.add_sample(np.random.multivariate_normal(np.zeros(3), np.eye(3,3)))
-        return samples
+if __name__ == '__main__':
+    unittest.main()
