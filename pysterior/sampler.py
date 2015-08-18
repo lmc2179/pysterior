@@ -19,20 +19,32 @@ class LeapfrogIntegrator(object):
         return value, momentum
 
 class NUTS(object):
-    MAX_EPSILON = 1024.0
     def _select_heuristic_epsilon(self, energy, initial_point):
-        epsilon = 2**(-10) #TODO: Epsilon keeps exploding, added bandage
-        momentum = self._sample_momentum(self._get_dimension(initial_point))
-        leapfrog = LeapfrogIntegrator(energy.gradient)
-        next_point, next_momentum = leapfrog.run_leapfrog(initial_point, momentum, 1, epsilon)
-        a = 2*self.I(self._get_log_probability(energy, initial_point, momentum) - self._get_log_probability(energy, next_point, next_momentum) > math.log(0.5)) - 1
-        while(a*((self._get_log_probability(energy, initial_point, momentum) - self._get_log_probability(energy, next_point, next_momentum))) > math.log(2**-a)):
-            if epsilon > self.MAX_EPSILON:
-                epsilon = 1.0 #TODO: Why does this happen?
-                a = -1*a
-            epsilon = (2**a) * epsilon
-            next_point, next_momentum = leapfrog.run_leapfrog(initial_point, momentum, 1, epsilon)
+        TARGET_ACCEPTANCE = 0.65
+        epsilon = 1.0
+        rate_initial_value = 1.0
+        for i in range(0,10):
+            acceptance_rate = self._sample_acceptance_rate(energy, epsilon, initial_point, 100)
+            learning_rate = rate_initial_value / (i+1)
+            epsilon = epsilon - learning_rate*(TARGET_ACCEPTANCE - acceptance_rate)
         return epsilon
+
+    def _sample_acceptance_rate(self, energy, epsilon, initial_point, iterations):
+        leapfrog = LeapfrogIntegrator(energy.gradient)
+        accepted = 0
+        total = 0
+        dimension = self._get_dimension(initial_point)
+        for i in range(iterations):
+            momentum = self._sample_momentum(dimension)
+            next_point, next_momentum = leapfrog.run_leapfrog(initial_point, momentum, 10, epsilon)
+            log_acc_prob = min(math.log(1.0),
+                               self._get_log_probability(energy, next_point, next_momentum) - self._get_log_probability(
+                                   energy, initial_point, momentum))
+            if math.log(random.random()) < log_acc_prob:
+                accepted += 1
+            total += 1
+        acceptance_rate = 1.0 * accepted / total
+        return acceptance_rate
 
     def nuts_with_initial_epsilon(self, initial_point, energy, iterations, burn_in=0):
         epsilon = self._select_heuristic_epsilon(energy, initial_point)

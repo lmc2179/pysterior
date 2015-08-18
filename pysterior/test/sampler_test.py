@@ -9,6 +9,7 @@ import unittest
 #TODO: Make these automated tests
 
 class TestUnivariateDistributions(unittest.TestCase):
+    @unittest.skip('')
     def test_normal(self):
         TRUE_MEAN = -10.0
         TRUE_SIGMA = 3.7
@@ -21,14 +22,13 @@ class TestUnivariateDistributions(unittest.TestCase):
                           allow_input_downcast=True)
         E = energy.Energy(eval=f,
                           gradient=grad_f)
-        samples = sampler.nuts_with_initial_epsilon(0.0, E, iterations=10000, burn_in=10)
+        samples = sampler.nuts_with_initial_epsilon(0.0, E, iterations=10000, burn_in=100)
         w,p = shapiro(samples)
         self.assertGreater(p, 0.01)
 
-    @unittest.skip('')
     def test_laplace(self):
         TRUE_MEAN = -10.0
-        TRUE_SCALE = 3.7
+        TRUE_SCALE = 0.07
         sampler = NUTS()
         X = T.scalar('X')
         output = -1.0 * (abs(X - TRUE_MEAN) / TRUE_SCALE)
@@ -38,7 +38,7 @@ class TestUnivariateDistributions(unittest.TestCase):
                           allow_input_downcast=True)
         E = energy.Energy(eval=f,
                           gradient=grad_f)
-        samples = sampler.nuts_with_initial_epsilon(0.0, E, iterations=10000, burn_in=10)
+        samples = sampler.nuts_with_initial_epsilon(0.0, E, iterations=10000, burn_in=100)
         plt.hist(samples, bins=100)
         plt.show()
 
