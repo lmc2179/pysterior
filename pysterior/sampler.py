@@ -18,7 +18,33 @@ class LeapfrogIntegrator(object):
             value,momentum = self._leapfrog_step(value, momentum, step_size)
         return value, momentum
 
-class NUTS(object):
+
+class HamiltonianMCProcess(object):
+    def _sample_momentum(self, dimension):
+        if dimension == 0:
+            return np.random.normal()
+        else:
+            return np.random.normal(size=dimension)
+
+    def _get_dimension(self, p):
+        try: #TODO: Remove try/except
+            return len(p)
+        except TypeError:
+            return 0
+
+    def _get_probability(self, energy, p, r):
+        return math.exp(energy.eval(p) - (0.5 * np.dot(r,r)))
+
+    def _get_log_probability(self, energy, p, r):
+        return energy.eval(p) - (0.5 * np.dot(r,r))
+
+
+class RobbinsMonroEpsilonEstimator(HamiltonianMCProcess):
+    def estimate_epsilon(self, energy, initial_point):
+        epsilon = self._select_heuristic_epsilon(energy, initial_point)
+        print('Selected epsilon = ', epsilon)
+        return epsilon
+
     def _select_heuristic_epsilon(self, energy, initial_point):
         TARGET_ACCEPTANCE = 0.65
         epsilon = 1.0
@@ -46,10 +72,13 @@ class NUTS(object):
         acceptance_rate = 1.0 * accepted / total
         return acceptance_rate
 
+class NUTS(HamiltonianMCProcess):
     def nuts_with_initial_epsilon(self, initial_point, energy, iterations, burn_in=0):
-        epsilon = self._select_heuristic_epsilon(energy, initial_point)
+        epsilon = RobbinsMonroEpsilonEstimator().estimate_epsilon(energy, initial_point)
+        return self.nuts_with_fixed_epsilon(initial_point, energy, epsilon, iterations, burn_in)
+
+    def nuts_with_fixed_epsilon(self, initial_point, energy, epsilon, iterations, burn_in=0):
         dimension = self._get_dimension(initial_point)
-        print('Selected epsilon = ', epsilon)
         samples = []
         current_sample = initial_point
         for i in range(iterations+burn_in):
@@ -103,23 +132,6 @@ class NUTS(object):
                 candidate_n = candidate_n + candidate_n_2
             return back, back_momentum, forward, forward_momentum, candidate_point, candidate_n, candidate_no_u_turn
 
-    def _sample_momentum(self, dimension):
-        if dimension == 0:
-            return np.random.normal()
-        else:
-            return np.random.normal(size=dimension)
-
-    def _get_dimension(self, p):
-        try: #TODO: Remove try/except
-            return len(p)
-        except TypeError:
-            return 0
-
-    def _get_probability(self, energy, p, r):
-        return math.exp(energy.eval(p) - (0.5 * np.dot(r,r)))
-
-    def _get_log_probability(self, energy, p, r):
-        return energy.eval(p) - (0.5 * np.dot(r,r))
 
     def I(self, statement):
         if statement == True:
