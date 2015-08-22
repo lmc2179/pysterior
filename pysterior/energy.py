@@ -57,27 +57,3 @@ def build_arg_closure(f, bound_kwargs, unbound_arg_name): #TODO: Add to own clas
         full_kwargs.update({unbound_arg_name: arg})
         return f(**full_kwargs)
     return partial_fxn
-
-
-class DirectSamplingEnergyFactory(object):
-    def construct_energy(self, fxn_spec, bound_arg_dict):
-        partial_dif = PartiallyDifferentiableFunctionFactory(fxn_spec)
-        f, grad = partial_dif.get_partial_diff(X)
-        f_closure = build_arg_closure(f, bound_arg_dict, X)
-        grad_closure = build_arg_closure(grad, bound_arg_dict, X)
-        return Energy(eval=f_closure,
-                      gradient=grad_closure)
-
-class ParameterPosteriorSamplingEnergyFactory(object):
-    def construct_energy(self, #TODO: omg so many arguments why
-                         fxn_spec,
-                         target_param,
-                         bound_arg_dict,
-                         data,
-                         prior_alpha,
-                         dimension):
-        partial_dif = PartiallyDifferentiableFunctionFactory(fxn_spec)
-        f, grad = partial_dif.get_partial_diff(target_param)
-        evidence_energies = self._build_evidence_energies(f, grad, bound_arg_dict, target_param, data)
-        prior_energy = self._build_prior_energy(f, grad, bound_arg_dict, target_param, prior_alpha)
-        total_energy = self._combine_energies(evidence_energies + [prior_energy])
