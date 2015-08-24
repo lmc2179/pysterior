@@ -1,9 +1,10 @@
 import numpy as np
-from pysterior import energy
+from pysterior import energy, sampler
 
 class GibbsSampler(object):
     def __init__(self, target_variables, total_energy_function, energy_gradients):
         self.target_variables = target_variables
+        self.epsilon = {v:None for v in target_variables}
         self.total_energy_function = total_energy_function
         self.energy_gradients = energy_gradients
 
@@ -22,11 +23,24 @@ class GibbsSampler(object):
         return current_state
 
     def _mutate_state(self, current_state, variable):
-        current_state[variable] += 1
+        E = self._build_energy(current_state, variable)
+        current_variable_value = current_state[variable]
+        new_variable_value = self._sample_variable_value(current_variable_value, E, variable)
+        current_state[variable] = new_variable_value
         return current_state
 
     def _build_energy(self, current_state, variable):
-        return energy.Energy()
+        return energy.Energy() #TODO: Here is where it gets ugly
+
+    def _sample_variable_value(self, current_variable_value, E, variable):
+        nuts = sampler.NUTS()
+        e = self.epsilon[variable]
+        if not e:
+            e = sampler.RobbinsMonroEpsilonEstimator().estimate_epsilon(E, current_variable_value, 10)
+            self.epsilon[variable] = e
+        sample = nuts.nuts_with_fixed_epsilon(current_variable_value, E, e, iterations=1)
+        return sample[0]
+
 
     def _vectorize_state(self, state):
         return np.array([state[v] for v in self.target_variables])

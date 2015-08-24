@@ -40,16 +40,16 @@ class HamiltonianMCProcess(object):
 
 
 class RobbinsMonroEpsilonEstimator(HamiltonianMCProcess):
-    def estimate_epsilon(self, energy, initial_point):
-        epsilon = self._select_heuristic_epsilon(energy, initial_point)
+    def estimate_epsilon(self, energy, initial_point, iterations=10):
+        epsilon = self._select_heuristic_epsilon(energy, initial_point, iterations)
         print('Selected epsilon = ', epsilon)
         return epsilon
 
-    def _select_heuristic_epsilon(self, energy, initial_point):
+    def _select_heuristic_epsilon(self, energy, initial_point, iterations):
         TARGET_ACCEPTANCE = 0.65
         epsilon = 1.0
         rate_initial_value = 1.0
-        for i in range(0,10):
+        for i in range(0,iterations):
             acceptance_rate = self._sample_acceptance_rate(energy, epsilon, initial_point, 100)
             learning_rate = rate_initial_value / (i+1)
             epsilon = epsilon - learning_rate*(TARGET_ACCEPTANCE - acceptance_rate)
