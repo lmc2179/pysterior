@@ -50,7 +50,7 @@ def build_kwarg_closure(f, bound_kwargs):
         return f(**full_kwargs)
     return partial_fxn
 
-def build_arg_closure(f, bound_kwargs, unbound_arg_name): #TODO: Add to own class or AbstractEnergyFactory
+def build_arg_closure(f, bound_kwargs, unbound_arg_name):
     def partial_fxn(arg):
         full_kwargs = {}
         full_kwargs.update(bound_kwargs)

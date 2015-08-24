@@ -2,6 +2,7 @@ import unittest
 from pysterior import gibbs_sampler, energy
 import functools
 import numpy as np
+import matplotlib.pyplot as plt
 
 class MvNormalGibbsSamplingTest(unittest.TestCase):
     def test_sampling(self):
@@ -19,8 +20,9 @@ class MvNormalGibbsSamplingTest(unittest.TestCase):
                                              closed_total_energy,
                                              closed_gradients)
         initial_state = {'X1': 1.0, 'X2': 2.0}
-        samples = sampler.run_sampling(initial_state, iterations=1000)
-        print(samples)
+        samples = sampler.run_sampling(initial_state, iterations=1000, burn_in=20)
+        plt.plot(*zip(*samples), linewidth=0.0, marker='.')
+        plt.show()
 
 if __name__ == '__main__':
     unittest.main()

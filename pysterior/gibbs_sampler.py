@@ -1,20 +1,23 @@
 import numpy as np
 from pysterior import energy, sampler
+import functools
+import copy
 
 class GibbsSampler(object):
     def __init__(self, target_variables, total_energy_function, energy_gradients):
         self.target_variables = target_variables
         self.epsilon = {v:None for v in target_variables}
         self.total_energy_function = total_energy_function
-        self.energy_gradients = energy_gradients
+        self.energy_gradients = {v:g for v,g in zip(target_variables, energy_gradients)}
 
-    def run_sampling(self, initial_state, iterations):
+    def run_sampling(self, initial_state, iterations, burn_in=0):
         samples = []
         state = initial_state
-        for i in range(iterations):
+        for i in range(iterations+burn_in):
             state = self._get_next_state(state)
             vectorized_state = self._vectorize_state(state)
-            samples.append(vectorized_state)
+            if i >= burn_in:
+                samples.append(vectorized_state)
         return samples
 
     def _get_next_state(self, current_state):
@@ -30,7 +33,23 @@ class GibbsSampler(object):
         return current_state
 
     def _build_energy(self, current_state, variable):
-        return energy.Energy() #TODO: Here is where it gets ugly
+        closed_state = copy.copy(current_state)
+        del closed_state[variable]
+        f = self.build_arg_closure(self.total_energy_function, closed_state, variable)
+        grad = self.build_arg_closure(self.energy_gradients[variable],
+                                 closed_state,
+                                 variable)
+        return energy.Energy(eval=f, gradient=grad)
+
+
+    def build_arg_closure(self, f, bound_kwargs, unbound_arg_name):
+        def partial_fxn(arg):
+            full_kwargs = {}
+            full_kwargs.update(bound_kwargs)
+            full_kwargs.update({unbound_arg_name: arg})
+            return f(**full_kwargs)
+        return partial_fxn
+
 
     def _sample_variable_value(self, current_variable_value, E, variable):
         nuts = sampler.NUTS()
