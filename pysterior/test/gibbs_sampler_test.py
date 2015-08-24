@@ -6,7 +6,7 @@ import numpy as np
 class MvNormalGibbsSamplingTest(unittest.TestCase):
     def test_sampling(self):
         gaussian_fxn_spec = energy.get_bivariate_normal_spec()
-        target_variables = gaussian_fxn_spec.variables[0:2]
+        target_variables = [v.name for v in gaussian_fxn_spec.variables[0:2]]
         factory = energy.PartiallyDifferentiableFunctionFactory(gaussian_fxn_spec)
         f, f_x1 = factory.get_partial_diff('X1')
         _, f_x2 = factory.get_partial_diff('X2')
@@ -20,6 +20,7 @@ class MvNormalGibbsSamplingTest(unittest.TestCase):
                                              closed_gradients)
         initial_state = {'X1': 1.0, 'X2': 2.0}
         samples = sampler.run_sampling(initial_state, iterations=1000)
+        print(samples)
 
 if __name__ == '__main__':
     unittest.main()
