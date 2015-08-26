@@ -1,5 +1,6 @@
 import unittest
 import math
+import numpy as np
 
 def compose(inner_function, outer_function):
     def composed_function(*args, **kwargs):
@@ -34,12 +35,19 @@ class FunctionalSpikesTest(unittest.TestCase):
         def add(x1=None, x2=None):
             return x1 + x2
 
+        def flatten(M):
+            return M.flatten()
+
         add_plus_one = subcompose_single(add_one, 'x1', add)
         self.assertEqual(add(x1=2, x2=2), 4)
         self.assertEqual(add_plus_one(x1=2, x2=2), 5)
         x1_plus_sqrt_x2 = subcompose_single(math.sqrt, 'x2', add)
         self.assertEqual(x1_plus_sqrt_x2(x1=12.3, x2=4), 14.3)
-
+        # Add flattened matrices
+        flatten_x1_and_add = subcompose_single(flatten, 'x1', add)
+        flatten_both_and_add = subcompose_single(flatten, 'x2', flatten_x1_and_add)
+        A = np.array([[0,1],[2,3]])
+        self.assertEqual(list(flatten_both_and_add(x1=A, x2=A)), [0, 2, 4, 6])
 
 if __name__ == '__main__':
     unittest.main()
