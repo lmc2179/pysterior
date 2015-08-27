@@ -2,6 +2,7 @@ from pysterior import energy
 import functools
 import numpy as np
 import unittest
+import math
 
 def subcompose_single(inner_function, target_kwarg, outer_function):
     def composed_function(**kwargs):
@@ -10,9 +11,20 @@ def subcompose_single(inner_function, target_kwarg, outer_function):
         return outer_function(**kwargs)
     return composed_function
 
+def compose(inner_function, outer_function):
+    def composed_function(*args, **kwargs):
+        return outer_function(inner_function(*args, **kwargs))
+    return composed_function
+
 def flatten(x):
-    if len(np.shape(x)) > 0:
+    if len(np.shape(x)) > 1:
         return x.flatten()
+    return x
+
+def unflatten(x):
+    if len(np.shape(x)) == 1:
+        root = math.sqrt(len(x))
+        return x.reshape((root, root))
     return x
 
 def build_arg_closure(f, bound_kwargs, unbound_arg_name):
@@ -39,7 +51,7 @@ class GaussianDirectEnergyBuilder(EnergyBuilder):
         factory = energy.PartiallyDifferentiableFunctionFactory(gaussian_fxn_spec)
         f, f_x1 = factory.get_partial_diff('X1')
         _, f_x2 = factory.get_partial_diff('X2')
-        closed_variables = {'mu': TRUE_MU, 'sigma': TRUE_SIGMA}
+        closed_variables = {'Mu': TRUE_MU, 'Sigma': TRUE_SIGMA}
         closed_total_energy = functools.partial(f, **closed_variables)
         closed_gradients = [functools.partial(f_x1, **closed_variables), functools.partial(f_x2, **closed_variables)]
         return closed_total_energy, target_variables, closed_gradients
@@ -49,8 +61,8 @@ class SphericalGaussianPriorFactory(object):
         gaussian_fxn_spec = energy.get_normal_spec()
         factory = energy.PartiallyDifferentiableFunctionFactory(gaussian_fxn_spec)
         f, gradient = factory.get_partial_diff('X')
-        closed_variables = {'mu': np.zeros(dimension),
-                            'sigma': np.eye(dimension) * alpha}
+        closed_variables = {'Mu': np.zeros(dimension),
+                            'Sigma': np.eye(dimension) * alpha}
         flatten_f = subcompose_single(flatten, 'X', f)
         flatten_gradient = subcompose_single(flatten, 'X', gradient)
         closed_total_energy = build_arg_closure(flatten_f, closed_variables, 'X')
@@ -61,11 +73,15 @@ class GaussianEvidenceFactory(object):
     def build_evidence_function(self, data):
         gaussian_fxn_spec = energy.get_normal_spec()
         factory = energy.PartiallyDifferentiableFunctionFactory(gaussian_fxn_spec)
-        f, mu_gradient = factory.get_partial_diff('mu')
-        _, sigma_gradient = factory.get_partial_diff('sigma')
+        f, mu_gradient = factory.get_partial_diff('Mu')
+        _, sigma_gradient = factory.get_partial_diff('Sigma')
+        f = subcompose_single(unflatten, 'Sigma', f)
+        mu_gradient = subcompose_single(unflatten, 'Sigma', mu_gradient)
+        sigma_gradient = subcompose_single(unflatten, 'Sigma', sigma_gradient)
         evidence_fxn = sum_map([functools.partial(f, **{'X': d}) for d in data])
         mu_evidence_gradient = sum_map([functools.partial(mu_gradient, **{'X': d}) for d in data])
         sigma_evidence_gradient = sum_map([functools.partial(sigma_gradient, **{'X': d}) for d in data])
+        sigma_evidence_gradient = compose(sigma_evidence_gradient, flatten)
         return evidence_fxn, mu_evidence_gradient, sigma_evidence_gradient
 
 class GaussianTotalEnergy(object):
@@ -76,22 +92,22 @@ class GaussianTotalEnergy(object):
         self.sigma_prior, self.sigma_prior_gradient = SphericalGaussianPriorFactory().build_prior(sigma_alpha, dimension**2)
         self.evidence_function, self.mu_evidence_gradient, self.sigma_evidence_gradient = GaussianEvidenceFactory().build_evidence_function(data)
 
-    def eval_total_energy(self, state):
+    def eval_total_energy(self, **state):
         evidence_energy = self.evidence_function(**state)
-        mu_prior_energy = self.mu_prior(state['mu'])
-        sigma_prior_energy = self.sigma_prior(state['sigma'])
+        mu_prior_energy = self.mu_prior(state['Mu'])
+        sigma_prior_energy = self.sigma_prior(state['Sigma'])
         return evidence_energy + mu_prior_energy + sigma_prior_energy
 
-    def eval_energy_mu_gradient(self, state):
+    def eval_energy_mu_gradient(self, **state):
         evidence_energy = self.mu_evidence_gradient(**state)
-        mu_prior_energy = self.mu_prior_gradient(state['mu'])
+        mu_prior_energy = self.mu_prior_gradient(state['Mu'])
         sigma_prior_energy = 0.0
         return evidence_energy + mu_prior_energy + sigma_prior_energy
 
-    def eval_energy_sigma_gradient(self, state):
+    def eval_energy_sigma_gradient(self, **state):
         evidence_energy = self.sigma_evidence_gradient(**state)
         mu_prior_energy = 0.0
-        sigma_prior_energy = self.sigma_prior(state['sigma'])
+        sigma_prior_energy = self.sigma_prior(state['Sigma'])
         return evidence_energy + mu_prior_energy + sigma_prior_energy
 
 
@@ -110,9 +126,9 @@ class GaussianEvidenceFactoryTest(unittest.TestCase):
         factory = GaussianEvidenceFactory()
         data = [np.array([0,0])]
         f, mu_grad, sigma_grad = factory.build_evidence_function(data)
-        hyp_1 = {'mu': np.array([1.0, 1.0]), 'sigma': np.eye(2)}
-        hyp_2 = {'mu': np.array([-1.0, -1.0]), 'sigma': np.eye(2)}
-        hyp_0 = {'mu': np.array([0.0, 0.0]), 'sigma': np.eye(2)}
+        hyp_1 = {'Mu': np.array([1.0, 1.0]), 'Sigma': np.eye(2).flatten()}
+        hyp_2 = {'Mu': np.array([-1.0, -1.0]), 'Sigma': np.eye(2).flatten()}
+        hyp_0 = {'Mu': np.array([0.0, 0.0]), 'Sigma': np.eye(2).flatten()}
         print(f(**hyp_1), mu_grad(**hyp_1), sigma_grad(**hyp_1))
         print(f(**hyp_2), mu_grad(**hyp_2), sigma_grad(**hyp_2))
         print(f(**hyp_0), mu_grad(**hyp_0), sigma_grad(**hyp_0))
@@ -122,9 +138,9 @@ class GaussianEvidenceFactoryTest(unittest.TestCase):
         factory = GaussianEvidenceFactory()
         data = [np.array([1,0]),np.array([-1,0]),np.array([0,1]),np.array([0,-1])]
         f, mu_grad, sigma_grad = factory.build_evidence_function(data)
-        hyp_1 = {'mu': np.array([1.0, 1.0]), 'sigma': np.eye(2)}
-        hyp_2 = {'mu': np.array([-1.0, -1.0]), 'sigma': np.eye(2)}
-        hyp_0 = {'mu': np.array([0.0, 0.0]), 'sigma': np.eye(2)}
+        hyp_1 = {'Mu': np.array([1.0, 1.0]), 'Sigma': np.eye(2).flatten()}
+        hyp_2 = {'Mu': np.array([-1.0, -1.0]), 'Sigma': np.eye(2).flatten()}
+        hyp_0 = {'Mu': np.array([0.0, 0.0]), 'Sigma': np.eye(2).flatten()}
         print(f(**hyp_1), mu_grad(**hyp_1), sigma_grad(**hyp_1))
         print(f(**hyp_2), mu_grad(**hyp_2), sigma_grad(**hyp_2))
         print(f(**hyp_0), mu_grad(**hyp_0), sigma_grad(**hyp_0))
@@ -134,12 +150,12 @@ class GaussianTotalEnergyTest(unittest.TestCase):
     def test_end_to_end(self):
         print('GAUSSIAN TOTAL ENERGY: ')
         E = GaussianTotalEnergy(1.0, 1.0, [np.array([0,0])])
-        state = {'mu': np.array([0.0, 1.0]), 'sigma': np.eye(2)}
-        print(E.eval_energy_mu_gradient(state))
-        state = {'mu': np.array([1.0, 0.0]), 'sigma': np.eye(2)}
-        print(E.eval_energy_mu_gradient(state))
-        state = {'mu': np.array([0.0, 0.0]), 'sigma': np.eye(2)}
-        print(E.eval_energy_mu_gradient(state))
+        state = {'Mu': np.array([0.0, 1.0]), 'Sigma': np.eye(2).flatten()}
+        print(E.eval_energy_mu_gradient(**state))
+        state = {'Mu': np.array([1.0, 0.0]), 'Sigma': np.eye(2).flatten()}
+        print(E.eval_energy_mu_gradient(**state))
+        state = {'Mu': np.array([0.0, 0.0]), 'Sigma': np.eye(2).flatten()}
+        print(E.eval_energy_mu_gradient(**state))
 
 if __name__ == '__main__':
     unittest.main()

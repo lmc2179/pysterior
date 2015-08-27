@@ -1,9 +1,9 @@
 import numpy as np
 from pysterior import energy, sampler
-import functools
 import copy
 
 class GibbsSampler(object):
+    RM_ITERATIONS = 10
     def __init__(self, target_variables, total_energy_function, energy_gradients):
         self.target_variables = target_variables
         self.epsilon = {v:None for v in target_variables}
@@ -55,7 +55,7 @@ class GibbsSampler(object):
         nuts = sampler.NUTS()
         e = self.epsilon[variable]
         if not e:
-            e = sampler.RobbinsMonroEpsilonEstimator().estimate_epsilon(E, current_variable_value, 10)
+            e = sampler.RobbinsMonroEpsilonEstimator().estimate_epsilon(E, current_variable_value, self.RM_ITERATIONS)
             self.epsilon[variable] = e
         sample = nuts.nuts_with_fixed_epsilon(current_variable_value, E, e, iterations=1)
         return sample[0]

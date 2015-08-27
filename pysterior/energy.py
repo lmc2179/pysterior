@@ -4,14 +4,14 @@ from theano.tensor import nlinalg
 from collections import namedtuple
 import numpy as np
 X = 'X'
-MU = 'mu'
+MU = 'Mu'
 
 FunctionSpec = namedtuple('FunctionSpec', ['variables', 'output_expression'])
 
 Energy = namedtuple('Energy', ['eval', 'gradient'])
 
 def get_normal_spec():
-    X,mu,sigma = [T.vector('X'), T.vector('mu'), T.matrix('sigma')]
+    X,mu,sigma = [T.vector('X'), T.vector('Mu'), T.matrix('Sigma')]
     GaussianDensitySpec = FunctionSpec(variables=[X, mu, sigma],
                                        output_expression = -0.5*T.dot(T.dot((X-mu).T, nlinalg.matrix_inverse(sigma)), (X-mu)))
     return GaussianDensitySpec
