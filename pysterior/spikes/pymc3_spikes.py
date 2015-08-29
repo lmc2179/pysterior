@@ -72,6 +72,8 @@ class LinearRegressionTest(unittest.TestCase):
         samples = lr.sample(X, y, 1)
         map_estimate = lr.get_map_estimate()
         print(map_estimate)
+        plt.plot(X, y, linewidth=0.0, marker='x')
+        plt.show()
 
 if __name__ == '__main__':
     unittest.main()
