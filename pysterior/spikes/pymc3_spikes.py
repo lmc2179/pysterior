@@ -6,14 +6,17 @@ import unittest
 
 # No. 1: Linear Regression
 class AbstractLinearRegression(object):
-    def sample(self, X, y, iterations):
+    def fit(self, X, y, sampling_iterations):
         X = self._force_shape(X)
         model = self._build_model(X, y)
         with model:
             self.map_estimate = pymc3.find_MAP(model=model)
             step = pymc3.NUTS(scaling=self.map_estimate)
-            trace = pymc3.sample(iterations, step, start=self.map_estimate)
-        return trace
+            trace = pymc3.sample(sampling_iterations, step, start=self.map_estimate)
+        self.samples = trace
+
+    def _build_model(self, X, y):
+        raise NotImplementedError
 
     def _force_shape(self, X):
         shape = np.shape(X)
@@ -23,6 +26,9 @@ class AbstractLinearRegression(object):
 
     def get_map_estimate(self):
         return self.map_estimate
+
+    def get_samples(self):
+        return self.samples
 
 class LinearRegression(AbstractLinearRegression):
     def _build_model(self, X, y):
@@ -74,7 +80,8 @@ class LinearRegressionTest(unittest.TestCase):
         X = np.array(list(zip(X1, X2)))
 
         lr = LinearRegression()
-        samples = lr.sample(X, y, 1)
+        lr.fit(X, y, 1)
+        samples = lr.get_samples()
         map_estimate = lr.get_map_estimate()
         expected_map = {'alpha': np.array(1.014043926179071), 'beta': np.array([ 1.46737108,  0.29347422]), 'sigma_log': np.array(0.11928775836956886)}
         self.assertAlmostEqual(float(map_estimate['alpha']), float(expected_map['alpha']), delta=1e-1)
@@ -91,7 +98,8 @@ class LinearRegressionTest(unittest.TestCase):
         y = (TRUE_ALPHA + TRUE_BETA*X + noise)
 
         lr = LinearRegression()
-        samples = lr.sample(X, y, 2000)
+        lr.fit(X, y, 2000)
+        samples = lr.get_samples()
         pymc3.traceplot(samples)
         plt.show()
         map_estimate = lr.get_map_estimate()
