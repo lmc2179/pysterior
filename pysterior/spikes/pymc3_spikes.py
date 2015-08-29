@@ -28,7 +28,8 @@ class BayesianLinearRegression(object):
 
         with lr_model:
             alpha = pymc3.Normal(name='alpha', mu=0, sd=20)
-            beta = pymc3.Normal(name='beta', mu=0, sd=10, shape=data_length)
+            precision = pymc3.Uniform(name='precision')
+            beta = pymc3.Normal(name='beta', mu=0, sd=1.0/precision, shape=data_length)
             sigma = pymc3.HalfNormal(name='sigma', sd=1)
             X = pymc3.Normal(name='X', mu=1, sd=2, observed=X)
             mu = alpha + beta.dot(X.T)
@@ -72,8 +73,8 @@ class LinearRegressionTest(unittest.TestCase):
         samples = lr.sample(X, y, 1)
         map_estimate = lr.get_map_estimate()
         print(map_estimate)
-        plt.plot(X, y, linewidth=0.0, marker='x')
-        plt.show()
+        # plt.plot(X, y, linewidth=0.0, marker='x')
+        # plt.show()
 
 if __name__ == '__main__':
     unittest.main()
