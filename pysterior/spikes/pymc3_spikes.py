@@ -7,12 +7,19 @@ import unittest
 # No. 1: Linear Regression
 class BayesianLinearRegression(object):
     def sample(self, X, y, iterations):
+        X = self._force_shape(X)
         model = self._build_model(X, y)
         with model:
             self.map_estimate = pymc3.find_MAP(model=model)
             step = pymc3.NUTS(scaling=self.map_estimate)
             trace = pymc3.sample(iterations, step, start=self.map_estimate)
         return trace
+
+    def _force_shape(self, X):
+        shape = np.shape(X)
+        if len(shape) == 1:
+            return np.reshape(X, (shape[0], 1))
+        return X
 
     def _build_model(self, X, y):
         lr_model = pymc3.Model()
@@ -57,9 +64,9 @@ class LinearRegressionTest(unittest.TestCase):
         TRUE_ALPHA, TRUE_SIGMA = 1, 1
         TRUE_BETA = 2.5
         size = 100
-        X = np.linspace(0, 1, size).reshape(100, 1)
-        noise = (np.random.randn(size)*TRUE_SIGMA).reshape(100, 1)
-        y = (TRUE_ALPHA + TRUE_BETA*X + noise).reshape(100,)
+        X = np.linspace(0, 1, size)
+        noise = (np.random.randn(size)*TRUE_SIGMA)
+        y = (TRUE_ALPHA + TRUE_BETA*X + noise)
 
         lr = BayesianLinearRegression()
         samples = lr.sample(X, y, 1)
