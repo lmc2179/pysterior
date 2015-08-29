@@ -2,17 +2,16 @@
 import pymc3
 import numpy as np
 from matplotlib import pyplot as plt
-
-np.random.seed(123)
+import unittest
 
 # No. 1: Linear Regression
 class BayesianLinearRegression(object):
     def sample(self, X, y, iterations):
         model = self._build_model(X, y)
         with model:
-            map_estimate = pymc3.find_MAP(model=model)
-            step = pymc3.NUTS(scaling=map_estimate)
-            trace = pymc3.sample(iterations, step, start=map_estimate)
+            self.map_estimate = pymc3.find_MAP(model=model)
+            step = pymc3.NUTS(scaling=self.map_estimate)
+            trace = pymc3.sample(iterations, step, start=self.map_estimate)
         return trace
 
     def _build_model(self, X, y):
@@ -28,18 +27,30 @@ class BayesianLinearRegression(object):
 
         return lr_model
 
-TRUE_ALPHA, TRUE_SIGMA = 1, 1
-TRUE_BETA = [1, 2.5]
-size = 100
-X1 = np.linspace(0, 1, size)
-X2 = np.linspace(0,.2, size)
-Y = TRUE_ALPHA + TRUE_BETA[0]*X1 + TRUE_BETA[1]*X2 + np.random.randn(size)*TRUE_SIGMA
+    def get_map_estimate(self):
+        return self.map_estimate
 
-X = np.array(list(zip(X1, X2)))
+class LinearRegressionTest(unittest.TestCase):
+    def test_linear_regression(self):
+        np.random.seed(123)
+        TRUE_ALPHA, TRUE_SIGMA = 1, 1
+        TRUE_BETA = [1, 2.5]
+        size = 100
+        X1 = np.linspace(0, 1, size)
+        X2 = np.linspace(0,.2, size)
+        y = TRUE_ALPHA + TRUE_BETA[0]*X1 + TRUE_BETA[1]*X2 + np.random.randn(size)*TRUE_SIGMA
 
-samples = BayesianLinearRegression().sample(X, Y, 5000)
-print(samples)
-plt.hist(samples['alpha'], bins=100)
-plt.show()
+        X = np.array(list(zip(X1, X2)))
+
+        lr = BayesianLinearRegression()
+        samples = lr.sample(X, y, 1)
+        map_estimate = lr.get_map_estimate()
+        expected_map = {'alpha': np.array(1.014043926179071), 'beta': np.array([ 1.46737108,  0.29347422]), 'sigma_log': np.array(0.11928775836956886)}
+        self.assertAlmostEqual(float(map_estimate['alpha']), float(expected_map['alpha']), delta=1e-3)
+        for true_beta, map_beta in zip(map_estimate['beta'], expected_map['beta']):
+            self.assertAlmostEqual(true_beta, map_beta, delta=1e-3)
+
+if __name__ == '__main__':
+    unittest.main()
 
 
