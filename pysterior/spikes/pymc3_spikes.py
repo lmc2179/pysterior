@@ -10,6 +10,8 @@ def build_lr_model(X1, X2, Y):
         alpha = pymc3.Normal(name='alpha', mu=0, sd=20)
         beta = pymc3.Normal(name='beta', mu=0, sd=10, shape=2)
         sigma = pymc3.HalfNormal(name='sigma', sd=1)
+        X1 = pymc3.Normal(name='X1', mu=1, sd=2, observed=X1)
+        X2 = pymc3.Normal(name='X2', mu=1, sd=2, observed=X2)
         mu = alpha + beta[0]*X1 + beta[1]*X2
         Y_obs = pymc3.Normal(name='Y_obs', mu=mu, sd=sigma, observed=Y)
 
