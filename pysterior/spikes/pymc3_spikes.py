@@ -15,6 +15,18 @@ class AbstractLinearRegression(object):
             trace = pymc3.sample(sampling_iterations, step, start=self.map_estimate)
         self.samples = trace
 
+    def get_predictive_posterior_samples(self, x):
+        "Obtain a sample of the output variable's distribution by running the sample variable values through the model."
+        predictive_posterior_samples = []
+        for alpha, beta in zip(self.samples['alpha'], self.samples['beta']):
+            predictive_posterior_samples.append(alpha + np.dot(x, beta))
+        return predictive_posterior_samples
+
+    def predict(self, x):
+        "Approximates the expected value of the output variable."
+        s = self.get_predictive_posterior_samples(x)
+        return sum(s) / len(s)
+
     def _build_model(self, X, y):
         raise NotImplementedError
 
@@ -80,13 +92,19 @@ class LinearRegressionTest(unittest.TestCase):
         X = np.array(list(zip(X1, X2)))
 
         lr = LinearRegression()
-        lr.fit(X, y, 1)
+        lr.fit(X, y, 10000)
         samples = lr.get_samples()
         map_estimate = lr.get_map_estimate()
         expected_map = {'alpha': np.array(1.014043926179071), 'beta': np.array([ 1.46737108,  0.29347422]), 'sigma_log': np.array(0.11928775836956886)}
         self.assertAlmostEqual(float(map_estimate['alpha']), float(expected_map['alpha']), delta=1e-1)
         for true_beta, map_beta in zip(map_estimate['beta'], expected_map['beta']):
             self.assertAlmostEqual(true_beta, map_beta, delta=1e-1)
+        test_point = X[7]
+        true_y = TRUE_ALPHA + TRUE_BETA[0]*test_point[0] + TRUE_BETA[1]*test_point[1]
+        print(true_y)
+        predicted_y = lr.predict(test_point)
+        print(predicted_y)
+        self.assertAlmostEqual(true_y, predicted_y, delta=1e-1)
 
     def test_simple_linear_regression(self):
         np.random.seed(123)
@@ -99,13 +117,13 @@ class LinearRegressionTest(unittest.TestCase):
 
         lr = LinearRegression()
         lr.fit(X, y, 2000)
-        samples = lr.get_samples()
-        pymc3.traceplot(samples)
-        plt.show()
-        map_estimate = lr.get_map_estimate()
-        print(map_estimate)
-        # plt.plot(X, y, linewidth=0.0, marker='x')
-        # plt.show()
+        test_point = X[7]
+        true_y = TRUE_ALPHA + TRUE_BETA*test_point
+        print(true_y)
+        predicted_y = lr.predict(test_point)
+        print(predicted_y)
+        self.assertAlmostEqual(true_y, predicted_y, delta=1e-1)
+
 
 if __name__ == '__main__':
     unittest.main()
