@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 import unittest
 
 # No. 1: Linear Regression
-class BayesianLinearRegression(object):
+class LinearRegression(object):
     def sample(self, X, y, iterations):
         X = self._force_shape(X)
         model = self._build_model(X, y)
@@ -52,7 +52,7 @@ class LinearRegressionTest(unittest.TestCase):
 
         X = np.array(list(zip(X1, X2)))
 
-        lr = BayesianLinearRegression()
+        lr = LinearRegression()
         samples = lr.sample(X, y, 1)
         map_estimate = lr.get_map_estimate()
         expected_map = {'alpha': np.array(1.014043926179071), 'beta': np.array([ 1.46737108,  0.29347422]), 'sigma_log': np.array(0.11928775836956886)}
@@ -69,8 +69,10 @@ class LinearRegressionTest(unittest.TestCase):
         noise = (np.random.randn(size)*TRUE_SIGMA)
         y = (TRUE_ALPHA + TRUE_BETA*X + noise)
 
-        lr = BayesianLinearRegression()
-        samples = lr.sample(X, y, 1)
+        lr = LinearRegression()
+        samples = lr.sample(X, y, 2000)
+        pymc3.traceplot(samples)
+        plt.show()
         map_estimate = lr.get_map_estimate()
         print(map_estimate)
         # plt.plot(X, y, linewidth=0.0, marker='x')
