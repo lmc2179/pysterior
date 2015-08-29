@@ -123,6 +123,10 @@ class LinearRegressionTest(unittest.TestCase):
         predicted_y = lr.predict(test_point)
         print(predicted_y)
         self.assertAlmostEqual(true_y, predicted_y, delta=1e-1)
+        # predicted_line = [lr.predict(x) for x in X]
+        # plt.plot(X, y, linewidth=0.0, marker='x', color='g')
+        # plt.plot(X, predicted_line)
+        # plt.show()
 
 
 if __name__ == '__main__':
