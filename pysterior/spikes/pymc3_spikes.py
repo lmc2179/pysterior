@@ -17,9 +17,11 @@ class BayesianLinearRegression(object):
     def _build_model(self, X, y):
         lr_model = pymc3.Model()
 
+        data_length = len(X[0])
+
         with lr_model:
             alpha = pymc3.Normal(name='alpha', mu=0, sd=20)
-            beta = pymc3.Normal(name='beta', mu=0, sd=10, shape=2)
+            beta = pymc3.Normal(name='beta', mu=0, sd=10, shape=data_length)
             sigma = pymc3.HalfNormal(name='sigma', sd=1)
             X = pymc3.Normal(name='X', mu=1, sd=2, observed=X)
             mu = alpha + beta.dot(X.T)
@@ -31,7 +33,7 @@ class BayesianLinearRegression(object):
         return self.map_estimate
 
 class LinearRegressionTest(unittest.TestCase):
-    def test_linear_regression(self):
+    def test_multiple_linear_regression(self):
         np.random.seed(123)
         TRUE_ALPHA, TRUE_SIGMA = 1, 1
         TRUE_BETA = [1, 2.5]
@@ -49,6 +51,20 @@ class LinearRegressionTest(unittest.TestCase):
         self.assertAlmostEqual(float(map_estimate['alpha']), float(expected_map['alpha']), delta=1e-3)
         for true_beta, map_beta in zip(map_estimate['beta'], expected_map['beta']):
             self.assertAlmostEqual(true_beta, map_beta, delta=1e-3)
+
+    def test_simple_linear_regression(self):
+        np.random.seed(123)
+        TRUE_ALPHA, TRUE_SIGMA = 1, 1
+        TRUE_BETA = 2.5
+        size = 100
+        X = np.linspace(0, 1, size).reshape(100, 1)
+        noise = (np.random.randn(size)*TRUE_SIGMA).reshape(100, 1)
+        y = (TRUE_ALPHA + TRUE_BETA*X + noise).reshape(100,)
+
+        lr = BayesianLinearRegression()
+        samples = lr.sample(X, y, 1)
+        map_estimate = lr.get_map_estimate()
+        print(map_estimate)
 
 if __name__ == '__main__':
     unittest.main()
