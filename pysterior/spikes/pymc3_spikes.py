@@ -8,14 +8,14 @@ np.random.seed(123)
 # No. 1: Linear Regression
 class BayesianLinearRegression(object):
     def sample(self, X, y, iterations):
-        model = self._build_lr_model(X, y)
+        model = self._build_model(X, y)
         with model:
             map_estimate = pymc3.find_MAP(model=model)
             step = pymc3.NUTS(scaling=map_estimate)
             trace = pymc3.sample(iterations, step, start=map_estimate)
         return trace
 
-    def _build_lr_model(self, X, y):
+    def _build_model(self, X, y):
         lr_model = pymc3.Model()
 
         with lr_model:
