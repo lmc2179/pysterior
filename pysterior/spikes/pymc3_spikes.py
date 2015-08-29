@@ -27,7 +27,8 @@ class LinearRegression(object):
         data_length = len(X[0])
 
         with lr_model:
-            alpha = pymc3.Normal(name='alpha', mu=0, sd=20)
+            alpha_precision = pymc3.Uniform(name='alpha_precision')
+            alpha = pymc3.Normal(name='alpha', mu=0, sd=1.0/alpha_precision)
             precision = pymc3.Uniform(name='precision')
             beta = pymc3.Normal(name='beta', mu=0, sd=1.0/precision, shape=data_length)
             sigma = pymc3.HalfNormal(name='sigma', sd=1)
