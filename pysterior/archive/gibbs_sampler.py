@@ -1,6 +1,9 @@
-import numpy as np
-from pysterior import energy, sampler
 import copy
+
+import numpy as np
+
+from archive import sampler, energy
+
 
 class GibbsSampler(object):
     RM_ITERATIONS = 10

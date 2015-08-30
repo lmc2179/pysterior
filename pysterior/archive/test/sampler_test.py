@@ -1,10 +1,16 @@
+import unittest
+
 import theano.tensor as T
 from theano import function, grad
-from pysterior.sampler import NUTS
-from pysterior import energy
 import matplotlib.pyplot as plt
 from scipy.stats import shapiro
-import unittest
+
+from archive import energy
+
+from archive.sampler import NUTS
+from pysterior import energy
+
+
 
 #TODO: Make these automated tests
 

@@ -1,9 +1,12 @@
 import unittest
-from pysterior import gibbs_sampler, energy
 import functools
+
 import numpy as np
 import matplotlib.pyplot as plt
+
+from archive import gibbs_sampler, energy
 from pysterior.spikes import energy_function_spikes
+
 
 class MvNormalGibbsSamplingTest(unittest.TestCase):
     def _run_gaussian_direct_sampling(self, TRUE_MU, TRUE_SIGMA):

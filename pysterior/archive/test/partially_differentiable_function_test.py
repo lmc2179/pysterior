@@ -1,7 +1,7 @@
 import os
 os.path.join('..')
 import unittest
-from pysterior import energy
+from archive import energy
 import theano.tensor as T
 
 class PartiallyDiffFunctionFactoryTest(unittest.TestCase):
