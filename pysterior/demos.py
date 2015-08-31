@@ -33,6 +33,11 @@ def polynomial_regression_demo():
     noise = (np.random.randn(size)*TRUE_SIGMA)
     y = (TRUE_ALPHA + TRUE_BETA1*X + TRUE_BETA2*X**2 + TRUE_BETA3*X**3  + TRUE_BETA4*X**4 + noise)
 
+    # Add outliers - Make this a different test, compare to
+    # X = np.concatenate((X, [-.30]), axis=0)
+    # y = np.concatenate((y, [5.0]), axis=0)
+    # size += 1
+
     lr = linear_regression.LinearRegression()
     poly_X = PolynomialFeatures(include_bias=False, degree=4).fit_transform(X.reshape((size,1)))
 
