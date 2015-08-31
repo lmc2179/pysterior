@@ -1,7 +1,7 @@
 # This is a pilot of encapsulating pymc3 models
 import unittest
 import numpy as np
-from linear_regression import LinearRegression
+from linear_regression import LinearRegression, RidgeRegression
 
 class LinearRegressionTest(unittest.TestCase):
     def test_multiple_linear_regression(self):
@@ -30,7 +30,7 @@ class LinearRegressionTest(unittest.TestCase):
         print(predicted_y)
         self.assertAlmostEqual(true_y, predicted_y, delta=1e-1)
 
-    def test_simple_linear_regression(self):
+    def _test_simple_linear_regression_for_model(self, model):
         np.random.seed(123)
         TRUE_ALPHA, TRUE_SIGMA = 1, 1
         TRUE_BETA = 2.5
@@ -39,7 +39,7 @@ class LinearRegressionTest(unittest.TestCase):
         noise = (np.random.randn(size)*TRUE_SIGMA)
         y = (TRUE_ALPHA + TRUE_BETA*X + noise)
 
-        lr = LinearRegression()
+        lr = model
         lr.fit(X, y, 2000)
         test_point = X[7]
         true_y = TRUE_ALPHA + TRUE_BETA*test_point
@@ -47,11 +47,13 @@ class LinearRegressionTest(unittest.TestCase):
         predicted_y = lr.predict(test_point)
         print(predicted_y)
         self.assertAlmostEqual(true_y, predicted_y, delta=1e-1)
-        # predicted_line = [lr.predict(x) for x in X]
-        # plt.plot(X, y, linewidth=0.0, marker='x', color='g')
-        # plt.plot(X, predicted_line)
-        # plt.show()
 
+
+    def test_simple_linear_regression(self):
+        self._test_simple_linear_regression_for_model(LinearRegression())
+
+    def test_simple_linear_regression_ridge(self):
+        self._test_simple_linear_regression_for_model(RidgeRegression(1000))
 
 if __name__ == '__main__':
     unittest.main()
