@@ -5,6 +5,7 @@ import pymc3
 class AbstractLinearRegression(object):
     def fit(self, X, y, sampling_iterations):
         X = self._force_shape(X)
+        self.input_data_dimension = len(X[0])
         model = self._build_model(X, y)
         with model:
             self.map_estimate = pymc3.find_MAP(model=model)
@@ -24,9 +25,6 @@ class AbstractLinearRegression(object):
         s = self.get_predictive_posterior_samples(x)
         return sum(s) / len(s)
 
-    def _build_model(self, X, y):
-        raise NotImplementedError
-
     def _force_shape(self, X):
         shape = np.shape(X)
         if len(shape) == 1:
@@ -39,42 +37,50 @@ class AbstractLinearRegression(object):
     def get_samples(self):
         return self.samples
 
+    def _build_model(self, X, y):
+        lr_model = pymc3.Model()
+
+        with lr_model:
+            alpha = self._get_alpha()
+            beta = self._get_beta()
+            sigma = self._get_sigma()
+            X = pymc3.Normal(name='X', mu=1, sd=2, observed=X)
+            mu = alpha + beta.dot(X.T)
+            Y_obs = pymc3.Normal(name='Y_obs', mu=mu, sd=sigma, observed=y)
+
+        return lr_model
+
+    def _get_sigma(self):
+        noise_precision = pymc3.Uniform(name='noise_precision')
+        sigma = pymc3.HalfNormal(name='sigma', sd=1.0 / noise_precision)
+        return sigma
+
+    def _get_alpha(self):
+        raise NotImplementedError
+
+    def _get_beta(self):
+        raise NotImplementedError
 
 class LinearRegression(AbstractLinearRegression):
-    def _build_model(self, X, y):
-        lr_model = pymc3.Model()
+    def _get_alpha(self):
+        alpha_precision = pymc3.Uniform(name='alpha_precision')
+        alpha = pymc3.Normal(name='alpha', mu=0, sd=1.0 / alpha_precision)
+        return alpha
 
-        data_length = len(X[0])
-
-        with lr_model:
-            alpha_precision = pymc3.Uniform(name='alpha_precision')
-            alpha = pymc3.Normal(name='alpha', mu=0, sd=1.0/alpha_precision)
-            precision = pymc3.Uniform(name='precision')
-            beta = pymc3.Normal(name='beta', mu=0, sd=1.0/precision, shape=data_length)
-            noise_precision = pymc3.Uniform(name='noise_precision')
-            sigma = pymc3.HalfNormal(name='sigma', sd=1.0/noise_precision)
-            X = pymc3.Normal(name='X', mu=1, sd=2, observed=X)
-            mu = alpha + beta.dot(X.T)
-            Y_obs = pymc3.Normal(name='Y_obs', mu=mu, sd=sigma, observed=y)
-
-        return lr_model
-
+    def _get_beta(self):
+        precision = pymc3.Uniform(name='precision')
+        beta = pymc3.Normal(name='beta', mu=0, sd=1.0 / precision, shape=self.input_data_dimension)
+        return beta
 
 class RidgeRegression(AbstractLinearRegression):
-    def __init__(self, alpha):
-        self.alpha = alpha
+    def __init__(self, weight_prior_precision):
+        self.weight_prior_precision = weight_prior_precision
 
-    def _build_model(self, X, y):
-        lr_model = pymc3.Model()
+    def _get_alpha(self):
+        alpha = pymc3.Normal(name='alpha', mu=0, sd=self.weight_prior_precision)
+        return alpha
 
-        data_length = len(X[0])
-
-        with lr_model:
-            alpha = pymc3.Normal(name='alpha', mu=0, sd=self.alpha)
-            beta = pymc3.Normal(name='beta', mu=0, sd=self.alpha, shape=data_length)
-            sigma = pymc3.HalfNormal(name='sigma', sd=1)
-            X = pymc3.Normal(name='X', mu=1, sd=2, observed=X)
-            mu = alpha + beta.dot(X.T)
-            Y_obs = pymc3.Normal(name='Y_obs', mu=mu, sd=sigma, observed=y)
-
-        return lr_model
+    def _get_beta(self):
+        precision = pymc3.Uniform(name='precision')
+        beta = pymc3.Normal(name='beta', mu=0, sd=1.0 / precision, shape=self.input_data_dimension)
+        return beta
