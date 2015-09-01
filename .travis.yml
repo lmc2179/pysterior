@@ -6,6 +6,6 @@ python:
   - "3.5-dev"
   - "nightly"
 # command to install dependencies
-install: "pip install pymc3"
+install: "pip install --process-dependency-links git+https://github.com/pymc-devs/pymc3"
 # command to run tests
 script: "tests/linear_regression_tests"
