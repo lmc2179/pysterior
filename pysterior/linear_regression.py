@@ -73,11 +73,11 @@ class LinearRegression(AbstractLinearRegression):
         return beta
 
 class RidgeRegression(AbstractLinearRegression):
-    def __init__(self, weight_prior_precision):
-        self.weight_prior_precision = weight_prior_precision
+    def __init__(self, weight_prior_sdev):
+        self.weight_prior_sdev = weight_prior_sdev
 
     def _get_alpha(self):
-        alpha = pymc3.Normal(name='alpha', mu=0, sd=self.weight_prior_precision)
+        alpha = pymc3.Normal(name='alpha', mu=0, sd=self.weight_prior_sdev)
         return alpha
 
     def _get_beta(self):
