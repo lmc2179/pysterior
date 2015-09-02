@@ -84,3 +84,9 @@ class RidgeRegression(AbstractLinearRegression):
         precision = pymc3.Uniform(name='precision')
         beta = pymc3.Normal(name='beta', mu=0, sd=1.0 / precision, shape=self.input_data_dimension)
         return beta
+
+class RobustLinearRegression(LinearRegression):
+    def _get_sigma(self):
+        noise_precision = pymc3.Uniform(name='noise_precision')
+        sigma = pymc3.HalfCauchy(name='sigma', beta=1.0 / noise_precision)
+        return sigma
