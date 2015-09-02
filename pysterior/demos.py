@@ -34,11 +34,6 @@ def polynomial_regression_demo():
     noise = (np.random.randn(size)*TRUE_SIGMA)
     y = (TRUE_ALPHA + TRUE_BETA1*X + TRUE_BETA2*X**2 + TRUE_BETA3*X**3  + TRUE_BETA4*X**4 + noise)
 
-    # Add outliers - Make this a different test, compare to
-    # X = np.concatenate((X, [-.30]), axis=0)
-    # y = np.concatenate((y, [5.0]), axis=0)
-    # size += 1
-
     lr = linear_regression.LinearRegression()
     poly_X = PolynomialFeatures(include_bias=False, degree=4).fit_transform(X.reshape((size,1)))
 
@@ -62,11 +57,6 @@ def cubic_regression_comparison():
     X = np.linspace(-1.0, 1.0, size)
     noise = (np.random.randn(size)*TRUE_SIGMA)
     y = (TRUE_ALPHA + TRUE_BETA1*X + TRUE_BETA2*X**2 + TRUE_BETA3*X**3  + TRUE_BETA4*X**4 + noise)
-
-    # Add outliers - Make this a different test, compare to
-    # X = np.concatenate((X, [-.30]), axis=0)
-    # y = np.concatenate((y, [5.0]), axis=0)
-    # size += 1
 
     lr = linear_regression.LinearRegression()
     poly_X = PolynomialFeatures(include_bias=False, degree=4).fit_transform(X.reshape((size,1)))
@@ -94,15 +84,12 @@ def robust_cubic_regression_comparison():
     TRUE_BETA2 = 6.5
     TRUE_BETA3 = 2.5
     TRUE_BETA4 = -10.5
-    size = 10
+    size = 12
     X = np.linspace(-1.0, 1.0, size)
     noise = (np.random.randn(size)*TRUE_SIGMA)
     y = TRUE_ALPHA + TRUE_BETA1*X + TRUE_BETA2*X**2 + TRUE_BETA3*X**3  + TRUE_BETA4*X**4 + noise
-
-    # Add outliers - Make this a different test, compare to
-    X = np.concatenate((X, [-.30, -.2]), axis=0)
-    y = np.concatenate((y, [8.0, 6.0]), axis=0)
-    size += 2
+    y[3] = -10.0
+    y[4] = -8.0
 
     lr = linear_regression.RobustLinearRegression()
     poly_X = PolynomialFeatures(include_bias=False, degree=4).fit_transform(X.reshape((size,1)))
@@ -112,7 +99,7 @@ def robust_cubic_regression_comparison():
     transpose = list(zip(*pred_post_points))
     for y_values in transpose:
         plt.plot(X, y_values, color='r', linestyle='dotted')
-    predicted_line = [lr.predict(x) for x in poly_X]
+    predicted_line = np.array([lr.predict(x) for x in poly_X])
     plt.plot(X, predicted_line, color='black')
 
     ols = linear_model.LinearRegression()
