@@ -1,5 +1,5 @@
 import numpy as np
-import linear_regression
+from pysterior import linear_regression
 from matplotlib import pyplot as plt
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn import linear_model
