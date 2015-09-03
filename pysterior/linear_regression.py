@@ -1,8 +1,7 @@
 import numpy as np
 import pymc3
 
-
-class AbstractLinearRegression(object):
+class AbstractModel(object):
     def fit(self, X, y, sampling_iterations):
         X = self._force_shape(X)
         self.input_data_dimension = len(X[0])
@@ -13,17 +12,8 @@ class AbstractLinearRegression(object):
             trace = pymc3.sample(sampling_iterations, step, start=self.map_estimate)
         self.samples = trace
 
-    def get_predictive_posterior_samples(self, x):
-        "Obtain a sample of the output variable's distribution by running the sample variable values through the model."
-        predictive_posterior_samples = []
-        for alpha, beta in zip(self.samples['alpha'], self.samples['beta']):
-            predictive_posterior_samples.append(alpha + np.dot(x, beta))
-        return predictive_posterior_samples
-
-    def predict(self, x):
-        "Approximates the expected value of the output variable."
-        s = self.get_predictive_posterior_samples(x)
-        return sum(s) / len(s)
+    def _build_model(self, X, y):
+        raise NotImplementedError
 
     def _force_shape(self, X):
         shape = np.shape(X)
@@ -36,6 +26,19 @@ class AbstractLinearRegression(object):
 
     def get_samples(self):
         return self.samples
+
+class AbstractLinearRegression(AbstractModel):
+    def get_predictive_posterior_samples(self, x):
+        "Obtain a sample of the output variable's distribution by running the sample variable values through the model."
+        predictive_posterior_samples = []
+        for alpha, beta in zip(self.samples['alpha'], self.samples['beta']):
+            predictive_posterior_samples.append(alpha + np.dot(x, beta))
+        return predictive_posterior_samples
+
+    def predict(self, x):
+        "Approximates the expected value of the output variable."
+        s = self.get_predictive_posterior_samples(x)
+        return sum(s) / len(s)
 
     def _build_model(self, X, y):
         lr_model = pymc3.Model()
