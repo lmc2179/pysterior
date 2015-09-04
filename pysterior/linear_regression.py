@@ -88,6 +88,18 @@ class RidgeRegression(AbstractLinearRegression):
         beta = pymc3.Normal(name='beta', mu=0, sd=1.0 / precision, shape=self.input_data_dimension)
         return beta
 
+class LassoRegression(AbstractLinearRegression):
+    def __init__(self, weight_prior_scale):
+        self.weight_prior_scale = weight_prior_scale
+
+    def _get_alpha(self):
+        alpha = pymc3.Laplace('alpha', 0, self.weight_prior_scale)
+        return alpha
+
+    def _get_beta(self):
+        beta = pymc3.Laplace('beta', 0, self.weight_prior_scale, shape=self.input_data_dimension)
+        return beta
+
 class RobustLinearRegression(LinearRegression):
     def _get_sigma(self):
         noise_precision = pymc3.Uniform(name='noise_precision')

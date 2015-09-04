@@ -1,7 +1,7 @@
 # This is a pilot of encapsulating pymc3 models
 import unittest
 import numpy as np
-from linear_regression import LinearRegression, RidgeRegression, RobustLinearRegression
+from linear_regression import LinearRegression, RidgeRegression, RobustLinearRegression, LassoRegression
 
 class LinearRegressionTest(unittest.TestCase):
     def test_multiple_linear_regression(self):
@@ -54,6 +54,9 @@ class LinearRegressionTest(unittest.TestCase):
 
     def test_simple_linear_regression_ridge(self):
         self._test_simple_linear_regression_for_model(RidgeRegression(1000))
+
+    def test_simple_linear_regression_lasso(self):
+        self._test_simple_linear_regression_for_model(LassoRegression(1000))
 
     def test_simple_linear_regression_robust(self):
         self._test_simple_linear_regression_for_model(RobustLinearRegression())
