@@ -5,7 +5,7 @@ import numpy as np
 from theano import tensor as T
 from theano import map, function
 
-class AbstractLogisticRegression(linear_regression.AbstractModel):
+class AbstractLogisticRegression(linear_regression._AbstractModel):
     def get_predictive_posterior_samples(self, x):
         raise NotImplementedError
 
