@@ -6,8 +6,8 @@
 
 Under the hood, `pysterior` uses the implementation of the [No-U-Turn Sampler (Hoffman and Gelman, 2011)](http://arxiv.org/abs/1111.4246) provided by the thoroughly wonderful [pymc3](https://github.com/pymc-devs/pymc3). Pymc3 is a requirement to run `pysterior`; see the pymc3 page to find out how to get the latest version.
 
-You can install the latest version of this package from PyPI, where it is currently in alpha. The current models are currently supported:
-* Bayesian Linear Rigression
+You can install the latest version of this package from PyPI, where it is currently in alpha. The following regression models are currently supported:
+* Bayesian Linear Regression
 * Bayesian Ridge Regression
 * Bayesian Lasso Regression
 * Bayesian Robust Linear regression (Cauchy-distributed noise)
