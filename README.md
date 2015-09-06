@@ -16,6 +16,13 @@ Coming soon:
 * Logistic regression
 * Non-linear models
 
+---------------------------------
+
+Simple linear regression example:
+
+![Linear Regression](https://raw.githubusercontent.com/lmc2179/pysterior/master/pysterior/demo/simple_linear_regression.png)
+
+
 ```
     TRUE_ALPHA, TRUE_SIGMA = 1, 1
     TRUE_BETA = 2.5
