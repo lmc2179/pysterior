@@ -1,7 +1,7 @@
 import numpy as np
 import pymc3
 
-class AbstractModel(object):
+class _AbstractModel(object):
     def fit(self, X, y, sampling_iterations):
         X = self._force_shape(X)
         self.input_data_dimension = len(X[0])
@@ -27,7 +27,7 @@ class AbstractModel(object):
     def get_samples(self):
         return self.samples
 
-class AbstractLinearRegression(AbstractModel):
+class _AbstractLinearRegression(_AbstractModel):
     def get_predictive_posterior_samples(self, x):
         "Obtain a sample of the output variable's distribution by running the sample variable values through the model."
         predictive_posterior_samples = []
@@ -64,7 +64,7 @@ class AbstractLinearRegression(AbstractModel):
     def _get_beta(self):
         raise NotImplementedError
 
-class LinearRegression(AbstractLinearRegression):
+class LinearRegression(_AbstractLinearRegression):
     def _get_alpha(self):
         alpha_precision = pymc3.Uniform(name='alpha_precision')
         alpha = pymc3.Normal(name='alpha', mu=0, sd=1.0 / alpha_precision)
@@ -75,7 +75,7 @@ class LinearRegression(AbstractLinearRegression):
         beta = pymc3.Normal(name='beta', mu=0, sd=1.0 / precision, shape=self.input_data_dimension)
         return beta
 
-class RidgeRegression(AbstractLinearRegression):
+class RidgeRegression(_AbstractLinearRegression):
     def __init__(self, weight_prior_sdev):
         self.weight_prior_sdev = weight_prior_sdev
 
@@ -88,7 +88,7 @@ class RidgeRegression(AbstractLinearRegression):
         beta = pymc3.Normal(name='beta', mu=0, sd=1.0 / precision, shape=self.input_data_dimension)
         return beta
 
-class LassoRegression(AbstractLinearRegression):
+class LassoRegression(_AbstractLinearRegression):
     def __init__(self, weight_prior_scale):
         self.weight_prior_scale = weight_prior_scale
 
