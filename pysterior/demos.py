@@ -35,7 +35,7 @@ def linear_regression_credible_demo():
     lr.fit(X, y, 1000)
     plt.plot(X, y, linewidth=0.0, marker='x', color='g')
     for alpha, color in [(0.05, 'r'), (0.1, 'g'), (0.2, 'b')]:
-        intervals = [lr.predict_credible_interval(x, alpha) for x in X]
+        intervals = [lr.predict_central_credible_interval(x, alpha) for x in X]
         lower_bound, upper_bound = zip(*intervals)
         plt.plot(X, lower_bound, color=color)
         plt.plot(X, upper_bound, color=color)
@@ -62,6 +62,33 @@ def polynomial_regression_demo():
     transpose = list(zip(*pred_post_points))
     for y_values in transpose:
         plt.plot(X, y_values, color='r')
+    predicted_line = [lr.predict(x) for x in poly_X]
+    plt.plot(X, predicted_line)
+    plt.plot(X, y, linewidth=0.0, marker='x', color='g')
+    plt.show()
+
+def polynomial_regression_interval_demo():
+    TRUE_ALPHA, TRUE_SIGMA = 1, 1.0
+    TRUE_BETA1 = 2.5
+    TRUE_BETA2 = 6.5
+    TRUE_BETA3 = 2.5
+    TRUE_BETA4 = -10.5
+    size = 10
+    X = np.linspace(-1.0, 1.0, size)
+    noise = (np.random.randn(size)*TRUE_SIGMA)
+    y = (TRUE_ALPHA + TRUE_BETA1*X + TRUE_BETA2*X**2 + TRUE_BETA3*X**3  + TRUE_BETA4*X**4 + noise)
+
+    lr = linear_regression.LinearRegression()
+    poly_X = PolynomialFeatures(include_bias=False, degree=4).fit_transform(X.reshape((size,1)))
+
+    lr.fit(poly_X, y, 1000)
+
+    for alpha, color in [(0.05, 'r'), (0.1, 'g'), (0.2, 'b')]:
+        intervals = [lr.predict_central_credible_interval(x, alpha) for x in poly_X]
+        lower_bound, upper_bound = zip(*intervals)
+        plt.plot(X, lower_bound, color=color)
+        plt.plot(X, upper_bound, color=color)
+
     predicted_line = [lr.predict(x) for x in poly_X]
     plt.plot(X, predicted_line)
     plt.plot(X, y, linewidth=0.0, marker='x', color='g')
@@ -132,7 +159,8 @@ def robust_cubic_regression_comparison():
 
 if __name__ == '__main__':
     # linear_regression_demo()
-    linear_regression_credible_demo()
+    # linear_regression_credible_demo()
+    polynomial_regression_interval_demo()
     # polynomial_regression_demo()
     # cubic_regression_comparison()
     # robust_cubic_regression_comparison()

@@ -40,7 +40,7 @@ class _AbstractLinearRegression(_AbstractModel):
         s = self.get_predictive_posterior_samples(x)
         return sum(s) / len(s)
 
-    def predict_credible_interval(self, x, alpha):
+    def predict_central_credible_interval(self, x, alpha):
         if alpha > 0.5:
             raise Exception('Invalid alpha: '.format(alpha))
         s = self.get_predictive_posterior_samples(x)
