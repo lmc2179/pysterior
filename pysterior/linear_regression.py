@@ -40,6 +40,16 @@ class _AbstractLinearRegression(_AbstractModel):
         s = self.get_predictive_posterior_samples(x)
         return sum(s) / len(s)
 
+    def predict_credible_interval(self, x, alpha):
+        if alpha > 0.5:
+            raise Exception('Invalid alpha: '.format(alpha))
+        s = self.get_predictive_posterior_samples(x)
+        return self._get_central_credible_interval_from_sorted_samples(sorted(s), alpha)
+
+    def _get_central_credible_interval_from_sorted_samples(self, samples, alpha):
+        left_index = round((alpha/2.0) * len(samples))-1
+        return (samples[left_index], samples[-left_index-1])
+
     def _build_model(self, X, y):
         lr_model = pymc3.Model()
 

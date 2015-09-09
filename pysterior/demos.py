@@ -23,6 +23,26 @@ def linear_regression_demo():
     plt.plot(X, predicted_line)
     plt.show()
 
+def linear_regression_credible_demo():
+    TRUE_ALPHA, TRUE_SIGMA = 1, 1
+    TRUE_BETA = 2.5
+    size = 100
+    X = np.linspace(0, 1, size)
+    noise = (np.random.randn(size)*TRUE_SIGMA)
+    y = (TRUE_ALPHA + TRUE_BETA*X + noise)
+
+    lr = linear_regression.LinearRegression()
+    lr.fit(X, y, 1000)
+    plt.plot(X, y, linewidth=0.0, marker='x', color='g')
+    for alpha, color in [(0.05, 'r'), (0.1, 'g'), (0.2, 'b')]:
+        intervals = [lr.predict_credible_interval(x, alpha) for x in X]
+        lower_bound, upper_bound = zip(*intervals)
+        plt.plot(X, lower_bound, color=color)
+        plt.plot(X, upper_bound, color=color)
+    predicted_line = [lr.predict(x) for x in X]
+    plt.plot(X, predicted_line)
+    plt.show()
+
 def polynomial_regression_demo():
     TRUE_ALPHA, TRUE_SIGMA = 1, 1.0
     TRUE_BETA1 = 2.5
@@ -112,6 +132,7 @@ def robust_cubic_regression_comparison():
 
 if __name__ == '__main__':
     # linear_regression_demo()
+    linear_regression_credible_demo()
     # polynomial_regression_demo()
     # cubic_regression_comparison()
-    robust_cubic_regression_comparison()
+    # robust_cubic_regression_comparison()
