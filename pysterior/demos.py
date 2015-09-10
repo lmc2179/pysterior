@@ -78,10 +78,14 @@ def polynomial_regression_interval_demo():
     noise = (np.random.randn(size)*TRUE_SIGMA)
     y = (TRUE_ALPHA + TRUE_BETA1*X + TRUE_BETA2*X**2 + TRUE_BETA3*X**3  + TRUE_BETA4*X**4 + noise)
 
+    holdout_X = np.array([0.23, 0.78])
+    noise = (np.random.randn(len(holdout_X))*TRUE_SIGMA)
+    holdout_y = (TRUE_ALPHA + TRUE_BETA1*holdout_X + TRUE_BETA2*holdout_X**2 + TRUE_BETA3*holdout_X**3  + TRUE_BETA4*holdout_X**4 + noise)
+
     lr = linear_regression.LinearRegression()
     poly_X = PolynomialFeatures(include_bias=False, degree=4).fit_transform(X.reshape((size,1)))
 
-    lr.fit(poly_X, y, 1000)
+    lr.fit(poly_X, y, 7000)
 
     for alpha, color in [(0.05, 'r'), (0.1, 'g'), (0.2, 'b')]:
         intervals = [lr.predict_central_credible_interval(x, alpha) for x in poly_X]
@@ -92,6 +96,7 @@ def polynomial_regression_interval_demo():
     predicted_line = [lr.predict(x) for x in poly_X]
     plt.plot(X, predicted_line)
     plt.plot(X, y, linewidth=0.0, marker='x', color='g')
+    plt.plot(holdout_X, holdout_y, linewidth=0.0, marker='x', color='r')
     plt.show()
 
 def cubic_regression_comparison():
