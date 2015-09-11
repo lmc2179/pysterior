@@ -35,12 +35,18 @@ class _AbstractLinearRegression(_AbstractModel):
             predictive_posterior_samples.append(alpha + np.dot(x, beta))
         return predictive_posterior_samples
 
-    def predict(self, x):
+    def predict_single(self, x):
         "Approximates the expected value of the output variable."
         s = self.get_predictive_posterior_samples(x)
         return sum(s) / len(s)
 
-    def predict_central_credible_interval(self, x, alpha):
+    def predict(self, X):
+        return np.array([self.predict_single(x) for x in X])
+
+    def predict_central_credible_interval(self, X, alpha):
+        return np.array([self.predict_central_credible_interval_single(x, alpha) for x in X])
+
+    def predict_central_credible_interval_single(self, x, alpha):
         if alpha > 0.5:
             raise Exception('Invalid alpha: '.format(alpha))
         s = self.get_predictive_posterior_samples(x)
