@@ -1,5 +1,5 @@
 import numpy as np
-from linear_regression import _PolynomialFeatureGenerator
+
 from pysterior import linear_regression
 from matplotlib import pyplot as plt
 from sklearn.preprocessing import PolynomialFeatures
@@ -55,16 +55,13 @@ def polynomial_regression_demo():
     noise = (np.random.randn(size)*TRUE_SIGMA)
     y = (TRUE_ALPHA + TRUE_BETA1*X + TRUE_BETA2*X**2 + TRUE_BETA3*X**3  + TRUE_BETA4*X**4 + noise)
 
-    lr = linear_regression.LinearRegression()
-    gen = _PolynomialFeatureGenerator(4, 1)
-    poly_X = np.array([gen.preprocess(x) for x in X])
-
-    lr.fit(poly_X, y, 1000)
-    pred_post_points = [lr.get_predictive_posterior_samples(x) for x in poly_X]
+    lr = linear_regression.PolynomialRegression(4)
+    lr.fit(X, y, 1000)
+    pred_post_points = [lr.get_predictive_posterior_samples(x) for x in X]
     transpose = list(zip(*pred_post_points))
     for y_values in transpose:
         plt.plot(X, y_values, color='r')
-    predicted_line = lr.predict(poly_X)
+    predicted_line = lr.predict(X)
     plt.plot(X, predicted_line)
     plt.plot(X, y, linewidth=0.0, marker='x', color='g')
     plt.show()
@@ -84,18 +81,16 @@ def polynomial_regression_interval_demo():
     noise = (np.random.randn(len(holdout_X))*TRUE_SIGMA)
     holdout_y = (TRUE_ALPHA + TRUE_BETA1*holdout_X + TRUE_BETA2*holdout_X**2 + TRUE_BETA3*holdout_X**3  + TRUE_BETA4*holdout_X**4 + noise)
 
-    lr = linear_regression.LinearRegression()
-    poly_X = PolynomialFeatures(include_bias=False, degree=4).fit_transform(X.reshape((size,1)))
-
-    lr.fit(poly_X, y, 7000)
+    lr = linear_regression.PolynomialRegression(degree=4)
+    lr.fit(X, y, 7000)
 
     for alpha, color in [(0.05, 'r'), (0.1, 'g'), (0.2, 'b')]:
-        intervals = lr.predict_central_credible_interval(poly_X, alpha)
+        intervals = lr.predict_central_credible_interval(X, alpha)
         lower_bound, upper_bound = zip(*intervals)
         plt.plot(X, lower_bound, color=color)
         plt.plot(X, upper_bound, color=color)
 
-    predicted_line = lr.predict(poly_X)
+    predicted_line = lr.predict(X)
     plt.plot(X, predicted_line)
     plt.plot(X, y, linewidth=0.0, marker='x', color='g')
     plt.plot(holdout_X, holdout_y, linewidth=0.0, marker='x', color='r')
@@ -167,7 +162,7 @@ def robust_cubic_regression_comparison():
 if __name__ == '__main__':
     # linear_regression_demo()
     # linear_regression_credible_demo()
-    # polynomial_regression_interval_demo()
-    polynomial_regression_demo()
+    polynomial_regression_interval_demo()
+    # polynomial_regression_demo()
     # cubic_regression_comparison()
     # robust_cubic_regression_comparison()

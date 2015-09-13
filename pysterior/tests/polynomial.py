@@ -33,5 +33,10 @@ class SequenceTest(unittest.TestCase):
         gen = _PolynomialFeatureGenerator(2, len(x))
         self.assertEqual(list(gen.preprocess(x)), [1, 5, 2, 4, 25, 10])
 
+    def test_quadratic_univariate(self):
+        x = np.array(5)
+        gen = _PolynomialFeatureGenerator(2, 1)
+        self.assertEqual(list(gen.preprocess(x)), [1, 5, 25])
+
 if __name__ == '__main__':
     unittest.main()

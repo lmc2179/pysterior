@@ -125,8 +125,26 @@ class RobustLinearRegression(LinearRegression):
         return sigma
 
 class PolynomialRegression(LinearRegression):
-    pass
+    def __init__(self, degree, include_bias=True):
+        self.degree = degree
+        self.include_bias = True
 
+    def _get_dimension_from_data_point(self, point):
+        shape = np.shape(point)
+        if not shape:
+            return 1
+        else:
+            return shape[0]
+
+    def fit(self, X, y, sampling_iterations):
+        dimension = self._get_dimension_from_data_point(X[0])
+        self.feature_generator = _PolynomialFeatureGenerator(self.degree, dimension, inclue_bias=self.include_bias)
+        poly_X = np.array([self.feature_generator.preprocess(x) for x in X])
+        return super(PolynomialRegression, self).fit(poly_X, y, sampling_iterations)
+
+    def get_predictive_posterior_samples(self, x):
+        poly_x = self.feature_generator.preprocess(x)
+        return super(PolynomialRegression, self).get_predictive_posterior_samples(poly_x)
 
 class _NondecreasingSequenceEnumerator(object):
     def get_ones_vector(self, sequence):
