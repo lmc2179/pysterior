@@ -2,7 +2,7 @@ import unittest
 import numpy as np
 
 class NondecreasingFiniteSumFixedSequenceEnumerator(object):
-    "This one's for you, Java programmers."
+    "Enterprise edition."
     def get_ones_vector(self, sequence):
         if 0 in sequence:
             np_first_zero_index = list(np.where(sequence==0))
@@ -64,7 +64,7 @@ class NondecreasingFiniteSumFixedSequenceEnumerator(object):
         initial_sequence = np.array([n] + [0] * (l-1))
         seq = initial_sequence
         sequences = [np.copy(seq)]
-        while not self.is_final_config(seq): #TODO: How do we add inner moves to this? What sequence should occur?
+        while not self.is_final_config(seq):
             while self.inner_move_possible(seq):
                 seq = self.get_inner_move(seq)
                 sequences.append(np.copy(seq))
@@ -81,11 +81,30 @@ def heap_permutations(L):
 def preprocess_row_polynomial(row, degree, include_bias=True):
     pass
 
-class PolynomialTest(unittest.TestCase):
+class SequenceTest(unittest.TestCase):
     def test_seq(self):
-        print(NondecreasingFiniteSumFixedSequenceEnumerator().non_increasing_sequences(4, 3))
-        # print(get_inner_move(np.array([3, 1, 1])))
-        # print(get_inner_move(np.array([3, 1, 1, 0])))
+        sequences = NondecreasingFiniteSumFixedSequenceEnumerator().non_increasing_sequences(5, 3)
+        expected = ((3, 0, 0, 0, 0), (2, 1, 0, 0, 0), (1, 1, 1, 0, 0))
+        result_set = set(tuple([tuple(s) for s in sequences]))
+        self.assertEqual(set(expected), result_set)
+
+    def test_seq_2(self):
+        sequences = NondecreasingFiniteSumFixedSequenceEnumerator().non_increasing_sequences(3, 3)
+        expected = ((3, 0, 0), (2, 1, 0), (1, 1, 1))
+        result_set = set(tuple([tuple(s) for s in sequences]))
+        self.assertEqual(set(expected), result_set)
+
+    def test_seq_3(self):
+        sequences = NondecreasingFiniteSumFixedSequenceEnumerator().non_increasing_sequences(2, 3)
+        expected = ((3, 0), (2, 1))
+        result_set = set(tuple([tuple(s) for s in sequences]))
+        self.assertEqual(set(expected), result_set)
+
+    def test_seq_4(self):
+        sequences = NondecreasingFiniteSumFixedSequenceEnumerator().non_increasing_sequences(1, 3)
+        expected = {(3,)}
+        result_set = set(tuple([tuple(s) for s in sequences]))
+        self.assertEqual(expected, result_set)
 
 if __name__ == '__main__':
     unittest.main()
