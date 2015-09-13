@@ -1,11 +1,11 @@
 from math import exp, e
 import pymc3
-from pysterior import linear_regression
+from pysterior import regression
 import numpy as np
 from theano import tensor as T
 from theano import map, function
 
-class AbstractLogisticRegression(linear_regression._AbstractModel):
+class AbstractLogisticRegression(regression._AbstractModel):
     def get_predictive_posterior_samples(self, x):
         raise NotImplementedError
 

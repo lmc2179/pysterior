@@ -1,1 +1,1 @@
-from pysterior import linear_regression
+from pysterior import regression

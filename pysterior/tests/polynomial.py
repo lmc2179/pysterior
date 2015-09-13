@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from pysterior.linear_regression import _NondecreasingSequenceEnumerator, _PolynomialFeatureGenerator
+from pysterior.regression import _NondecreasingSequenceEnumerator, _PolynomialFeatureGenerator
 
 
 class SequenceTest(unittest.TestCase):

@@ -1,6 +1,6 @@
 import numpy as np
 
-from pysterior import linear_regression
+from pysterior import regression
 from matplotlib import pyplot as plt
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn import linear_model
@@ -13,7 +13,7 @@ def linear_regression_demo():
     noise = (np.random.randn(size)*TRUE_SIGMA)
     y = (TRUE_ALPHA + TRUE_BETA*X + noise)
 
-    lr = linear_regression.LinearRegression()
+    lr = regression.LinearRegression()
     lr.fit(X, y, 1000)
     plt.plot(X, y, linewidth=0.0, marker='x', color='g')
     pred_post_points = [lr.get_predictive_posterior_samples(x) for x in X]
@@ -32,7 +32,7 @@ def linear_regression_credible_demo():
     noise = (np.random.randn(size)*TRUE_SIGMA)
     y = (TRUE_ALPHA + TRUE_BETA*X + noise)
 
-    lr = linear_regression.LinearRegression()
+    lr = regression.LinearRegression()
     lr.fit(X, y, 2000)
     plt.plot(X, y, linewidth=0.0, marker='x', color='g')
     for alpha, color in [(0.05, 'r'), (0.1, 'g'), (0.2, 'b')]:
@@ -55,7 +55,7 @@ def polynomial_regression_demo():
     noise = (np.random.randn(size)*TRUE_SIGMA)
     y = (TRUE_ALPHA + TRUE_BETA1*X + TRUE_BETA2*X**2 + TRUE_BETA3*X**3  + TRUE_BETA4*X**4 + noise)
 
-    lr = linear_regression.PolynomialRegression(4)
+    lr = regression.PolynomialRegression(4)
     lr.fit(X, y, 1000)
     pred_post_points = [lr.get_predictive_posterior_samples(x) for x in X]
     transpose = list(zip(*pred_post_points))
@@ -81,7 +81,7 @@ def polynomial_regression_interval_demo():
     noise = (np.random.randn(len(holdout_X))*TRUE_SIGMA)
     holdout_y = (TRUE_ALPHA + TRUE_BETA1*holdout_X + TRUE_BETA2*holdout_X**2 + TRUE_BETA3*holdout_X**3  + TRUE_BETA4*holdout_X**4 + noise)
 
-    lr = linear_regression.PolynomialRegression(degree=4)
+    lr = regression.PolynomialRegression(degree=4)
     lr.fit(X, y, 7000)
 
     for alpha, color in [(0.05, 'r'), (0.1, 'g'), (0.2, 'b')]:
@@ -107,7 +107,7 @@ def cubic_regression_comparison():
     noise = (np.random.randn(size)*TRUE_SIGMA)
     y = (TRUE_ALPHA + TRUE_BETA1*X + TRUE_BETA2*X**2 + TRUE_BETA3*X**3  + TRUE_BETA4*X**4 + noise)
 
-    lr = linear_regression.LinearRegression()
+    lr = regression.LinearRegression()
     poly_X = PolynomialFeatures(include_bias=False, degree=4).fit_transform(X.reshape((size,1)))
 
     lr.fit(poly_X, y, 1000)
@@ -140,7 +140,7 @@ def robust_cubic_regression_comparison():
     y[3] = -10.0
     y[4] = -8.0
 
-    lr = linear_regression.RobustLinearRegression()
+    lr = regression.RobustLinearRegression()
     poly_X = PolynomialFeatures(include_bias=False, degree=4).fit_transform(X.reshape((size,1)))
 
     lr.fit(poly_X, y, 1000)
