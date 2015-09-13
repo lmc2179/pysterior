@@ -2,13 +2,17 @@ import unittest
 import numpy as np
 
 def get_ones_vector(sequence):
-    np_first_zero_index = list(np.where(sequence==0))
+    if 0 in sequence:
+        np_first_zero_index = list(np.where(sequence==0))
+    else:
+        np_first_zero_index = None
     if np_first_zero_index:
         first_zero = np_first_zero_index[0][0]
         ones_vector = np.array([1 if i < first_zero else 0
                                 for i in range(len(sequence))])
     else:
-        ones_vector = np.ones(len(sequence))
+        min_value = sequence[-1]
+        ones_vector = np.ones(len(sequence)) * min_value
     return ones_vector
 
 def get_inner_move(sequence):
@@ -76,7 +80,7 @@ def preprocess_row_polynomial(row, degree, include_bias=True):
 
 class PolynomialTest(unittest.TestCase):
     def test_seq(self):
-        print(non_increasing_sequences(3, 5))
+        print(non_increasing_sequences(4, 6))
         # print(get_inner_move(np.array([3, 1, 1])))
         # print(get_inner_move(np.array([3, 1, 1, 0])))
 
