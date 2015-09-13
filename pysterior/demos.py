@@ -1,9 +1,9 @@
 import numpy as np
+from linear_regression import _PolynomialFeatureGenerator
 from pysterior import linear_regression
 from matplotlib import pyplot as plt
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn import linear_model
-from spikes import polynomial_spike
 
 def linear_regression_demo():
     TRUE_ALPHA, TRUE_SIGMA = 1, 1
@@ -56,7 +56,7 @@ def polynomial_regression_demo():
     y = (TRUE_ALPHA + TRUE_BETA1*X + TRUE_BETA2*X**2 + TRUE_BETA3*X**3  + TRUE_BETA4*X**4 + noise)
 
     lr = linear_regression.LinearRegression()
-    gen = polynomial_spike.PolynomialFeatureGenerator(4, 1)
+    gen = _PolynomialFeatureGenerator(4, 1)
     poly_X = np.array([gen.preprocess(x) for x in X])
 
     lr.fit(poly_X, y, 1000)
