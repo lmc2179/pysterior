@@ -3,6 +3,7 @@ from pysterior import linear_regression
 from matplotlib import pyplot as plt
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn import linear_model
+from spikes import polynomial_spike
 
 def linear_regression_demo():
     TRUE_ALPHA, TRUE_SIGMA = 1, 1
@@ -55,7 +56,8 @@ def polynomial_regression_demo():
     y = (TRUE_ALPHA + TRUE_BETA1*X + TRUE_BETA2*X**2 + TRUE_BETA3*X**3  + TRUE_BETA4*X**4 + noise)
 
     lr = linear_regression.LinearRegression()
-    poly_X = PolynomialFeatures(include_bias=False, degree=4).fit_transform(X.reshape((size,1)))
+    gen = polynomial_spike.PolynomialFeatureGenerator(4, 1)
+    poly_X = np.array([gen.preprocess(x) for x in X])
 
     lr.fit(poly_X, y, 1000)
     pred_post_points = [lr.get_predictive_posterior_samples(x) for x in poly_X]
@@ -164,8 +166,8 @@ def robust_cubic_regression_comparison():
 
 if __name__ == '__main__':
     # linear_regression_demo()
-    linear_regression_credible_demo()
+    # linear_regression_credible_demo()
     # polynomial_regression_interval_demo()
-    # polynomial_regression_demo()
+    polynomial_regression_demo()
     # cubic_regression_comparison()
     # robust_cubic_regression_comparison()

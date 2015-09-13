@@ -94,6 +94,8 @@ class PolynomialFeatureGenerator(object):
         self.exponent_vectors = exponent_vectors
 
     def _get_polynomial_term(self, x, exponents):
+        if not np.shape(x):
+            return x**exponents[0]
         product_terms = [base**ex for base,ex in zip(x, exponents)]
         product = lambda x1, x2: x1*x2
         return functools.reduce(product, product_terms)
