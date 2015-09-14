@@ -18,6 +18,8 @@ Coming soon:
 
 ---------------------------------
 
+For demos, checkout the [demos directory](https://github.com/lmc2179/pysterior/tree/master/pysterior/demo).
+
 Simple linear regression example:
 
 ![Linear Regression](https://raw.githubusercontent.com/lmc2179/pysterior/master/pysterior/demo/simple_linear_regression.png)
