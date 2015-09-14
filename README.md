@@ -18,6 +18,8 @@ Coming soon:
 
 ---------------------------------
 
+For demos, checkout the [demos directory](https://github.com/lmc2179/pysterior/tree/master/pysterior/demo).
+
 Simple linear regression example:
 
 ![Linear Regression](https://raw.githubusercontent.com/lmc2179/pysterior/master/pysterior/demo/simple_linear_regression.png)
@@ -30,15 +32,15 @@ Simple linear regression example:
     X = np.linspace(0, 1, size)
     noise = (np.random.randn(size)*TRUE_SIGMA)
     y = (TRUE_ALPHA + TRUE_BETA*X + noise)
-
-    lr = linear_regression.LinearRegression()
-    lr.fit(X, y, 1000)
+    
+    lr = regression.LinearRegression()
+    lr.fit(X, y, 5000)
     plt.plot(X, y, linewidth=0.0, marker='x', color='g')
     pred_post_points = [lr.get_predictive_posterior_samples(x) for x in X]
     transpose = list(zip(*pred_post_points))
     for y_values in transpose:
         plt.plot(X, y_values, color='r')
-    predicted_line = [lr.predict(x) for x in X]
+    predicted_line = lr.predict(X)
     plt.plot(X, predicted_line)
     plt.show()
 ```
@@ -48,3 +50,4 @@ Simple linear regression example:
 Versions released:
 * 0.1.0 - first release, Linear regression models
 * 0.1.1 - predict() takes 2-dimensional array instead of single data point; added predict_central_credible_interval(X, alpha) for predicting central credible intervales of output
+* 0.1.2 - added Polynomial regression
