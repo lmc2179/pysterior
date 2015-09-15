@@ -11,6 +11,7 @@ You can install the latest version of this package from PyPI, where it is curren
 * Ridge Regression
 * Lasso Regression
 * Robust Linear regression (Cauchy-distributed noise)
+* Polynomial regression
 
 Coming soon:
 * Logistic regression
