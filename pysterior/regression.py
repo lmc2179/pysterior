@@ -2,6 +2,7 @@ import functools
 import itertools
 import numpy as np
 import pymc3
+from pymc3 import stats
 
 class _AbstractModel(object):
     def fit(self, X, y, sampling_iterations):
@@ -44,6 +45,15 @@ class _AbstractLinearRegression(_AbstractModel):
 
     def predict(self, X):
         return np.array([self.predict_single(x) for x in X])
+
+    def predict_hpd_interval(self, X, alpha):
+        return np.array([self.predict_hpd_interval_single(x, alpha) for x in X])
+
+    def predict_hpd_interval_single(self, x, alpha):
+        if alpha > 0.5:
+            raise Exception('Invalid alpha: '.format(alpha))
+        s = np.array(self.get_predictive_posterior_samples(x))
+        return pymc3.stats.hpd(s, alpha)
 
     def predict_central_credible_interval(self, X, alpha):
         return np.array([self.predict_central_credible_interval_single(x, alpha) for x in X])
