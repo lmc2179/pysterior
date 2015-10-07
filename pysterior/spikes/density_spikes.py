@@ -2,6 +2,7 @@ import pymc3
 import random
 from matplotlib import pyplot as plt
 import numpy as np
+import theano.tensor as T
 
 def test_bernoulli():
     data = [random.randint(0,1) for i in range(200)]
@@ -35,7 +36,8 @@ def test_categorical():
                                      p=p,
                                      shape=ndata,
                                      observed=v)
-        trace = pymc3.sample(3000, step=pymc3.Slice())
+        step = pymc3.Metropolis(vars=[p, category])
+        trace = pymc3.sample(3000, step=step)
 
     pymc3.traceplot(trace)
     plt.show()
