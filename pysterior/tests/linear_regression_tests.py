@@ -18,9 +18,9 @@ class LinearRegressionTest(unittest.TestCase):
         samples = lr.get_samples()
         map_estimate = lr.get_map_estimate()
         expected_map = {'alpha': np.array(1.014043926179071), 'beta': np.array([ 1.46737108,  0.29347422]), 'sigma_log': np.array(0.11928775836956886)}
-        self.assertAlmostEqual(float(map_estimate['alpha']), float(expected_map['alpha']), delta=1e-1)
+        print('Diff between expected map alpha and true alpha: ', float(map_estimate['alpha']) - float(expected_map['alpha']))
         for true_beta, map_beta in zip(map_estimate['beta'], expected_map['beta']):
-            self.assertAlmostEqual(true_beta, map_beta, delta=1e-1)
+            print('Diff between expected map beta and true beta: ', true_beta - map_beta)
         test_point = np.array([X[7]])
         true_y = TRUE_ALPHA + TRUE_BETA[0]*test_point[0][0] + TRUE_BETA[1]*test_point[0][1]
         print(true_y)
