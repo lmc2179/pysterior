@@ -52,3 +52,4 @@ Versions released:
 * 0.1.0 - first release, Linear regression models
 * 0.1.1 - predict() takes 2-dimensional array instead of single data point; added predict_central_credible_interval(X, alpha) for predicting central credible intervales of output
 * 0.1.2 - added Polynomial regression
+* 0.1.3 - added Highest Posterior Density Interval (HPDI) estimation for regression models
