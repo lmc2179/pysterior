@@ -23,6 +23,9 @@ class _AbstractModel(object):
     def traceplot(self):
         pymc3.traceplot(self.get_samples(), vars=['alpha', 'beta'])
 
+    def summary(self):
+        pymc3.summary(self.get_samples(), vars=['alpha', 'beta'])
+
     def _build_model(self, X, y):
         raise NotImplementedError
 
