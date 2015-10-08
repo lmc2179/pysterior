@@ -5,15 +5,23 @@ import pymc3
 from pymc3 import stats
 
 class _AbstractModel(object):
-    def fit(self, X, y, sampling_iterations):
+    def fit(self, X, y, sampling_iterations, sampler='NUTS'):
         X = self._force_shape(X)
         self.input_data_dimension = len(X[0])
         model = self._build_model(X, y)
         with model:
             self.map_estimate = pymc3.find_MAP(model=model)
-            step = pymc3.NUTS(scaling=self.map_estimate)
+            if sampler == 'NUTS':
+                step = pymc3.NUTS(scaling=self.map_estimate)
+            elif sampler == 'Metropolis':
+                step = pymc3.Metropolis()
+            else:
+                raise Exception('Unrecognized sampler {0}'.format(sampler))
             trace = pymc3.sample(sampling_iterations, step, start=self.map_estimate)
         self.samples = trace
+
+    def traceplot(self):
+        pymc3.traceplot(self.get_samples(), vars=['alpha', 'beta'])
 
     def _build_model(self, X, y):
         raise NotImplementedError
