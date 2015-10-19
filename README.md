@@ -59,3 +59,4 @@ Versions released:
 * 0.1.2 - added Polynomial regression
 * 0.1.3 - added Highest Posterior Density Interval (HPDI) estimation for regression models
 * 0.1.4 - added access to pymc3 traceplot and summary from model object; allowed manual selection of metropolis sampler if desired
+* 0.1.5 - added Binary Logistic regression model
