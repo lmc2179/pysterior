@@ -11,12 +11,3 @@ class LogisticRegressionTest(unittest.TestCase):
         for x in X:
             print(lr.get_predictive_posterior_samples(x))
             print(lr.predict(x))
-
-    def test_log_reg(self):
-        X = np.array([[1, 1], [-1, 1], [-1, 1], [-1, -1]])
-        y = [0, 1,  0, 1]
-        lr = classification.LogisticRegressionModel()
-        lr.fit(X, y, 1000)
-        for x in X:
-            print(lr.get_predictive_posterior_samples(x))
-            print(lr.predict(x))
