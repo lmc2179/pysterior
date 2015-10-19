@@ -8,7 +8,7 @@ Under the hood, `pysterior` uses the implementation of the [No-U-Turn Sampler (H
 
 Download pysterior on PyPI: https://pypi.python.org/pypi/pysterior
 
-You can install the latest version of this package from PyPI, where it is currently in alpha. The following regression models are currently supported:
+You can install the latest version of this package from PyPI, where it is currently in alpha. The following models are currently supported:
 * `regression` module:
     * (Bayesian) Linear Regression
     * Ridge Regression
