@@ -12,10 +12,11 @@ You can install the latest version of this package from PyPI, where it is curren
 * Lasso Regression
 * Robust Linear regression (Cauchy-distributed noise)
 * Polynomial regression
+* Binary Logistic regression
 
 Coming soon:
-* Logistic regression
-* Non-linear models
+* k-class Logistic regression
+* More non-linear models
 
 ---------------------------------
 
